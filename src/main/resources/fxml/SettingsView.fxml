@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.fretboard.controller.SettingsController"
+      spacing="15" prefWidth="450" prefHeight="350"
+      stylesheets="@../css/styles.css" styleClass="settings-pane">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    
+    <Label text="Settings" styleClass="settings-title"/>
+    <Separator/>
+    
+    <!-- Guitar Input Port Section -->
+    <VBox spacing="8">
+        <Label text="Guitar Input Port" styleClass="settings-section-title"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <ComboBox fx:id="inputPortComboBox" prefWidth="280" promptText="Select audio input..."/>
+            <Button fx:id="refreshPortsButton" text="Refresh" onAction="#handleRefreshPorts"/>
+            <Button text="Test" onAction="#handleTestInput"/>
+        </HBox>
+        <Label text="Select the audio input port where your guitar is connected" styleClass="settings-hint"/>
+    </VBox>
+    
+    <!-- Fret Count Section -->
+    <VBox spacing="8">
+        <Label text="Number of Frets" styleClass="settings-section-title"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Spinner fx:id="fretCountSpinner" prefWidth="100"/>
+            <Label text="frets (12-36)" styleClass="settings-hint"/>
+        </HBox>
+        <Label text="Set the number of frets on your guitar" styleClass="settings-hint"/>
+    </VBox>
+    
+    <Separator/>
+    
+    <!-- Status -->
+    <Label fx:id="statusLabel" text="" styleClass="settings-status"/>
+    
+    <!-- Buttons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="cancelButton" text="Cancel" onAction="#handleCancel" cancelButton="true"/>
+        <Button fx:id="saveButton" text="Save" onAction="#handleSave" defaultButton="true" styleClass="primary-button"/>
+    </HBox>
+</VBox>
