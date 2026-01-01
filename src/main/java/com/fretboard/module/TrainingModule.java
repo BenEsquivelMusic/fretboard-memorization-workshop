@@ -86,7 +86,7 @@ public interface TrainingModule {
      * Called when audio input is received from the guitar.
      * Modules can override this to process guitar input.
      *
-     * @param audioData the raw audio data from the guitar input
+     * @param audioData  the raw audio data from the guitar input
      * @param sampleRate the sample rate of the audio
      */
     default void onAudioInput(byte[] audioData, float sampleRate) {

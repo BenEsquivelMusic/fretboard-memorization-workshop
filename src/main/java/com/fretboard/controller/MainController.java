@@ -30,26 +30,20 @@ import java.util.logging.Logger;
 public final class MainController {
 
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
-
-    @FXML
-    private BorderPane rootPane;
-
-    @FXML
-    private VBox moduleListPane;
-
-    @FXML
-    private BorderPane contentPane;
-
-    @FXML
-    private Label statusLabel;
-
-    @FXML
-    private MenuBar menuBar;
-
-    private Stage primaryStage;
     private final UserDataService userDataService;
     private final AudioInputService audioInputService;
     private final TrainingModuleRegistry moduleRegistry;
+    @FXML
+    private BorderPane rootPane;
+    @FXML
+    private VBox moduleListPane;
+    @FXML
+    private BorderPane contentPane;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private MenuBar menuBar;
+    private Stage primaryStage;
     private TrainingModule activeModule;
 
     public MainController() {

@@ -9,13 +9,11 @@ import java.io.Serializable;
  */
 public final class UserSettings implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
-
     public static final int DEFAULT_FRET_COUNT = 24;
     public static final int MIN_FRET_COUNT = 12;
     public static final int MAX_FRET_COUNT = 36;
-
+    @Serial
+    private static final long serialVersionUID = 1L;
     private String guitarInputPort;
     private int numberOfFrets;
     private String dataSaveLocation;
@@ -34,8 +32,8 @@ public final class UserSettings implements Serializable {
     /**
      * Creates user settings with specified values.
      *
-     * @param guitarInputPort the audio input port for the guitar
-     * @param numberOfFrets   the number of frets on the guitar (12-36)
+     * @param guitarInputPort  the audio input port for the guitar
+     * @param numberOfFrets    the number of frets on the guitar (12-36)
      * @param dataSaveLocation the location to save user data
      */
     public UserSettings(String guitarInputPort, int numberOfFrets, String dataSaveLocation) {

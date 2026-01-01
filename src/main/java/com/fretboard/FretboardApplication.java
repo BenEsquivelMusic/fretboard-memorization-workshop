@@ -27,6 +27,15 @@ public final class FretboardApplication extends Application {
 
     private MainController mainController;
 
+    /**
+     * Main entry point for the application.
+     *
+     * @param args command line arguments
+     */
+    static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) {
         try {
@@ -90,14 +99,4 @@ public final class FretboardApplication extends Application {
         alert.showAndWait();
         Platform.exit();
     }
-
-    /**
-     * Main entry point for the application.
-     *
-     * @param args command line arguments
-     */
-    public static void main(String[] args) {
-        launch(args);
-    }
 }
-

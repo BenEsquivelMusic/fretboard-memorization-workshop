@@ -22,12 +22,11 @@ public final class AudioInputService {
     private static final Logger LOGGER = Logger.getLogger(AudioInputService.class.getName());
 
     private static AudioInputService instance;
-
+    private final List<TrainingModule> audioListeners;
     private TargetDataLine targetDataLine;
     private AudioFormat audioFormat;
     private ExecutorService captureExecutor;
     private volatile boolean capturing;
-    private final List<TrainingModule> audioListeners;
     private String currentPortName;
     private float sampleRate;
     private int bufferSize;
@@ -65,8 +64,7 @@ public final class AudioInputService {
 
             Line.Info[] targetLineInfos = mixer.getTargetLineInfo();
             for (Line.Info lineInfo : targetLineInfos) {
-                if (lineInfo instanceof DataLine.Info) {
-                    DataLine.Info dataLineInfo = (DataLine.Info) lineInfo;
+                if (lineInfo instanceof DataLine.Info dataLineInfo) {
                     if (TargetDataLine.class.isAssignableFrom(dataLineInfo.getLineClass())) {
                         ports.add(mixerInfo.getName());
                         break;

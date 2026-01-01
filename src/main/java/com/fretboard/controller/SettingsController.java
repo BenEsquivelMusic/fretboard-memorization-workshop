@@ -19,34 +19,25 @@ import java.util.logging.Logger;
 public final class SettingsController {
 
     private static final Logger LOGGER = Logger.getLogger(SettingsController.class.getName());
-
-    @FXML
-    private ComboBox<String> inputPortComboBox;
-
-    @FXML
-    private Spinner<Integer> fretCountSpinner;
-
-    @FXML
-    private TextField saveLocationField;
-
-    @FXML
-    private Button browseButton;
-
-    @FXML
-    private Button refreshPortsButton;
-
-    @FXML
-    private Button saveButton;
-
-    @FXML
-    private Button cancelButton;
-
-    @FXML
-    private Label statusLabel;
-
-    private Stage stage;
     private final UserDataService userDataService;
     private final AudioInputService audioInputService;
+    @FXML
+    private ComboBox<String> inputPortComboBox;
+    @FXML
+    private Spinner<Integer> fretCountSpinner;
+    @FXML
+    private TextField saveLocationField;
+    @FXML
+    private Button browseButton;
+    @FXML
+    private Button refreshPortsButton;
+    @FXML
+    private Button saveButton;
+    @FXML
+    private Button cancelButton;
+    @FXML
+    private Label statusLabel;
+    private Stage stage;
     private boolean settingsChanged;
 
     public SettingsController() {
