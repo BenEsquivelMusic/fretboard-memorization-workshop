@@ -12,7 +12,7 @@ public class UserSettings implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public static final int DEFAULT_FRET_COUNT = 22;
+    public static final int DEFAULT_FRET_COUNT = 24;
     public static final int MIN_FRET_COUNT = 12;
     public static final int MAX_FRET_COUNT = 36;
 

@@ -19,7 +19,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -178,9 +177,10 @@ public class MainController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About");
         alert.setHeaderText("Fretboard Memorization Workshop");
-        alert.setContentText("A training application for guitar fretboard memorization.\n\n" +
-                "Version 1.0\n" +
-                "Built with JavaFX 25");
+        alert.setContentText("""
+                A training application for guitar fretboard memorization.
+                
+                Built with JavaFX 25""");
         alert.showAndWait();
     }
 
@@ -203,7 +203,7 @@ public class MainController {
         for (TrainingModule module : moduleRegistry.getAllModules()) {
             Button moduleButton = new Button(module.getDisplayName());
             moduleButton.setMaxWidth(Double.MAX_VALUE);
-            moduleButton.setOnAction(e -> selectModule(module));
+            moduleButton.setOnAction(_ -> selectModule(module));
             moduleButton.getStyleClass().add("module-button");
 
             Tooltip tooltip = new Tooltip(module.getDescription());
@@ -248,11 +248,7 @@ public class MainController {
                 if (result.get() == saveButton) {
                     handleSaveFile();
                     return true;
-                } else if (result.get() == dontSaveButton) {
-                    return true;
-                } else {
-                    return false;
-                }
+                } else return result.get() == dontSaveButton;
             }
             return false;
         }

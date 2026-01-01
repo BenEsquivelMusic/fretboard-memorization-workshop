@@ -3,7 +3,6 @@ package com.fretboard.controller;
 import com.fretboard.model.UserSettings;
 import com.fretboard.service.AudioInputService;
 import com.fretboard.service.UserDataService;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
@@ -249,4 +248,5 @@ public class SettingsController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
 }

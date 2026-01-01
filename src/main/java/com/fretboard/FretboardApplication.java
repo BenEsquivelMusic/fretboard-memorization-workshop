@@ -2,7 +2,6 @@ package com.fretboard;
 
 import com.fretboard.controller.MainController;
 import com.fretboard.service.AudioInputService;
-import com.fretboard.service.UserDataService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;

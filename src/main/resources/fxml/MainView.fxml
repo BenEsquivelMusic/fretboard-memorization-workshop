@@ -3,11 +3,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<BorderPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml/1" 
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:id="rootPane"
             fx:controller="com.fretboard.controller.MainController"
             stylesheets="@../css/styles.css">
-    
+
     <!-- Menu Bar -->
     <top>
         <MenuBar fx:id="menuBar">
@@ -28,7 +27,7 @@
             </Menu>
         </MenuBar>
     </top>
-    
+
     <!-- Left Sidebar - Module List -->
     <left>
         <VBox fx:id="moduleListPane" styleClass="module-sidebar" spacing="5" minWidth="200" prefWidth="220">
@@ -39,7 +38,7 @@
             <Separator/>
         </VBox>
     </left>
-    
+
     <!-- Center - Main Content Area -->
     <center>
         <BorderPane fx:id="contentPane" styleClass="content-pane">
@@ -52,7 +51,7 @@
             </center>
         </BorderPane>
     </center>
-    
+
     <!-- Bottom - Status Bar -->
     <bottom>
         <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="10">
