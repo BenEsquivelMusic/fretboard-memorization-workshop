@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  * Service for managing user data persistence using binary serialization.
  * Supports saving and loading user data to/from files chosen by the user.
  */
-public class UserDataService {
+public final class UserDataService {
 
     private static final Logger LOGGER = Logger.getLogger(UserDataService.class.getName());
     private static final String FILE_EXTENSION = ".fmw";

@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * Service for managing audio input from the guitar.
  * Detects available audio input ports and captures audio data.
  */
-public class AudioInputService {
+public final class AudioInputService {
 
     private static final Logger LOGGER = Logger.getLogger(AudioInputService.class.getName());
 

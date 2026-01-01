@@ -6,7 +6,7 @@ import java.util.*;
  * Registry for managing training modules in the application.
  * Training modules can be registered and retrieved from this central registry.
  */
-public class TrainingModuleRegistry {
+public final class TrainingModuleRegistry {
 
     private static TrainingModuleRegistry instance;
 

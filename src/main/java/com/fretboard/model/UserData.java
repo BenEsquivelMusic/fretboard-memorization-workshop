@@ -10,7 +10,7 @@ import java.util.Map;
  * Model class for storing all user data including settings and training progress.
  * This class is serializable for binary file persistence.
  */
-public class UserData implements Serializable {
+public final class UserData implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  * Controller for the main application window.
  * Manages navigation between training modules and application-level actions.
  */
-public class MainController {
+public final class MainController {
 
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
 

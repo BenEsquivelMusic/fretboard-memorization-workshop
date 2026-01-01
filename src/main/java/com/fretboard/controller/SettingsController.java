@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * Controller for the settings window.
  * Manages guitar input port selection and fret count configuration.
  */
-public class SettingsController {
+public final class SettingsController {
 
     private static final Logger LOGGER = Logger.getLogger(SettingsController.class.getName());
 

@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  * Main application class for the Fretboard Memorization Workshop.
  * Initializes the JavaFX application and loads the main window.
  */
-public class FretboardApplication extends Application {
+public final class FretboardApplication extends Application {
 
     private static final Logger LOGGER = Logger.getLogger(FretboardApplication.class.getName());
     private static final String APP_TITLE = "Fretboard Memorization Workshop";

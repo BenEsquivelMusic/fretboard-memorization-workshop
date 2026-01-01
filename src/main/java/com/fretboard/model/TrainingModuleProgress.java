@@ -10,7 +10,7 @@ import java.util.Map;
  * Model class for storing progress data for a specific training module.
  * This class is serializable for binary file persistence.
  */
-public class TrainingModuleProgress implements Serializable {
+public final class TrainingModuleProgress implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

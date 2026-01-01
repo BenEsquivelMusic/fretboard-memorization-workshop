@@ -7,7 +7,7 @@ import java.io.Serializable;
  * Model class for storing user settings related to guitar configuration.
  * This class is serializable for binary file persistence.
  */
-public class UserSettings implements Serializable {
+public final class UserSettings implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
