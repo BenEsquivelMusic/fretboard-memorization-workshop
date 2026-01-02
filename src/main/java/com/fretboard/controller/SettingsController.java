@@ -5,10 +5,8 @@ import com.fretboard.service.AudioInputService;
 import com.fretboard.service.UserDataService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -25,8 +23,8 @@ public final class SettingsController {
     private ComboBox<String> inputPortComboBox;
     @FXML
     private Spinner<Integer> fretCountSpinner;
-    @FXML
-    private TextField saveLocationField;
+    //@FXML
+    //private TextField saveLocationField;
     @FXML
     private Button browseButton;
     @FXML
@@ -67,7 +65,7 @@ public final class SettingsController {
         updateStatus("Audio input ports refreshed");
     }
 
-    @FXML
+    /*@FXML
     public void handleBrowseSaveLocation() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Save Location");
@@ -84,7 +82,7 @@ public final class SettingsController {
         if (selectedDir != null) {
             saveLocationField.setText(selectedDir.getAbsolutePath());
         }
-    }
+    }*/
 
     @FXML
     public void handleSave() {
@@ -101,10 +99,10 @@ public final class SettingsController {
 
         settings.setNumberOfFrets(fretCountSpinner.getValue());
 
-        String saveLocation = saveLocationField.getText();
+        /*String saveLocation = saveLocationField.getText();
         if (saveLocation != null && !saveLocation.isBlank()) {
             settings.setDataSaveLocation(saveLocation);
-        }
+        }*/
 
         userDataService.markAsModified();
         settingsChanged = true;
@@ -185,9 +183,9 @@ public final class SettingsController {
 
         fretCountSpinner.getValueFactory().setValue(settings.getNumberOfFrets());
 
-        if (settings.isSaveLocationConfigured()) {
+        /*if (settings.isSaveLocationConfigured()) {
             saveLocationField.setText(settings.getDataSaveLocation());
-        }
+        }*/
     }
 
     private boolean validateSettings() {
