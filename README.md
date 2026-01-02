@@ -41,51 +41,23 @@ mvn clean javafx:jlink
 
 There are two common ways to run a JavaFX Maven-built project.
 
-A) If the project is configured with the javafx-maven-plugin (recommended)
+A) Run the compiled application
+
+1. Build the project:
+
+```bash
+mvn clean javafx:jlink
+```
+
+2. Navigate to the target/FretboardApplication/bin folder
+3. Run the application via FretboardApplication file (.bat for windows, .sh for linux)
+
+B) If the project is configured with the javafx-maven-plugin
 
 Use the plugin's run goal from the project root:
 
 ```bash
 mvn javafx:run
-```
-
-B) Run the packaged JAR (manual module-path approach)
-
-1. Build the project:
-
-```bash
-mvn clean package
-```
-
-2. Locate the produced JAR in `target/`. The filename usually looks like:
-`target/<artifactId>-<version>.jar`.
-
-3. If the JAR is a plain (non-modular) JAR and JavaFX is not on the classpath, run with the JavaFX SDK module path:
-
-Linux / macOS example:
-
-```bash
-java --module-path /path/to/javafx-sdk/lib \
-  --add-modules=javafx.controls,javafx.fxml \
-  -jar target/fretboard-memorization-workshop-<version>.jar
-```
-
-Windows (PowerShell) example:
-
-```powershell
-java --module-path "C:\path\to\javafx-sdk\lib" `
-  --add-modules=javafx.controls,javafx.fxml `
-  -jar target\fretboard-memorization-workshop-<version>.jar
-```
-
-Notes:
-- Replace `/path/to/javafx-sdk/lib` (or the Windows path) with the path to your JavaFX SDK `lib` directory.
-- Replace `<version>` with the actual artifact version from `target/`.
-
-If the project is packaged as a "fat" (uber) JAR that already contains JavaFX dependencies, you can run:
-
-```bash
-java -jar target/fretboard-memorization-workshop-<version>.jar
 ```
 
 ---
