@@ -1,6 +1,7 @@
 # Fretboard Memorization Workshop
 
 A JavaFX application for helping guitar players improve fretboard memorization.
+
 Note: this is currently a work in progress.
 
 TODO:
