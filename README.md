@@ -52,9 +52,7 @@ mvn clean javafx:jlink
 2. Navigate to the target/FretboardApplication/bin folder
 3. Run the application via FretboardApplication file (.bat for windows, .sh for linux)
 
-B) If the project is configured with the javafx-maven-plugin
-
-Use the plugin's run goal from the project root:
+B) Use the plugin's run goal from the project root:
 
 ```bash
 mvn javafx:run
