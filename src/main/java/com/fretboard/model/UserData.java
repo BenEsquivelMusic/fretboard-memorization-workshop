@@ -25,11 +25,7 @@ public final class UserData implements Serializable {
      * Default constructor for creating new user data.
      */
     public UserData() {
-        this.settings = new UserSettings();
-        this.moduleProgress = new HashMap<>();
-        this.createdDate = LocalDateTime.now();
-        this.lastModifiedDate = LocalDateTime.now();
-        this.version = "1.0";
+        this(new UserSettings());
     }
 
     /**
@@ -38,8 +34,11 @@ public final class UserData implements Serializable {
      * @param settings the user settings
      */
     public UserData(UserSettings settings) {
-        this();
         this.settings = settings;
+        this.moduleProgress = new HashMap<>();
+        this.createdDate = LocalDateTime.now();
+        this.lastModifiedDate = LocalDateTime.now();
+        this.version = "1.0";
     }
 
     // Getters and setters
