@@ -29,7 +29,7 @@ mvn -v
 
 ## Build (compile + package)
 
-The application can be built with javafx-maven-plugin using the plugin's jlink goal:
+The application can be built with javafx-maven-plugin using the plugin's jlink goal from the project root:
 
 ```bash
 mvn clean javafx:jlink
