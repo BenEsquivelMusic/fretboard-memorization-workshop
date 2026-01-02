@@ -12,6 +12,11 @@ public final class UserSettings implements Serializable {
     public static final int DEFAULT_FRET_COUNT = 24;
     public static final int MIN_FRET_COUNT = 12;
     public static final int MAX_FRET_COUNT = 36;
+
+    public static final int DEFAULT_STRING_COUNT = 6;
+    public static final int MIN_STRING_COUNT = 6;
+    public static final int MAX_STRING_COUNT = 8;
+
     @Serial
     private static final long serialVersionUID = 1L;
     private String guitarInputPort;
