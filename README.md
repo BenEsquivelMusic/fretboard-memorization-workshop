@@ -6,8 +6,8 @@ Note: this is currently a work in progress.
 
 TODO:
 
-Add modules for fretboard memorization.
-Allow users to track and visualize their progress over time.
+- Add modules for fretboard memorization.
+- Allow users to track and visualize their progress over time.
 
 This README explains how to compile and run the project using Maven.
 
