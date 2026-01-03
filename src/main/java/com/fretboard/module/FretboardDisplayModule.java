@@ -27,7 +27,8 @@ public class FretboardDisplayModule implements TrainingModule {
     private static final double STRING_SPACING = 30.0;
     private static final double NUT_WIDTH = 8.0;
     private static final double FRET_LINE_WIDTH = 2.0;
-    private static final double STRING_LINE_WIDTH = 1.5;
+    private static final double BASE_STRING_WIDTH = 2.5;
+    private static final double STRING_WIDTH_INCREMENT = 0.6;
     private static final double PADDING = 40.0;
     private static final double FRET_MARKER_RADIUS = 6.0;
 
@@ -106,8 +107,8 @@ public class FretboardDisplayModule implements TrainingModule {
         // Clear canvas
         gc.clearRect(0, 0, fretboardCanvas.getWidth(), fretboardCanvas.getHeight());
         
-        // Draw fretboard background
-        gc.setFill(Color.rgb(139, 90, 43)); // Wood brown color
+        // Draw fretboard background - darker rosewood color
+        gc.setFill(Color.rgb(62, 39, 35)); // Dark rosewood brown
         gc.fillRect(PADDING, PADDING, fretboardWidth + NUT_WIDTH, fretboardHeight);
         
         // Draw nut (the zero fret)
@@ -124,7 +125,7 @@ public class FretboardDisplayModule implements TrainingModule {
         }
         
         // Draw fret markers
-        gc.setFill(Color.rgb(255, 255, 255, 0.8)); // White with slight transparency
+        gc.setFill(Color.rgb(255, 255, 255, 0.9)); // White with slight transparency
         
         for (int marker : SINGLE_FRET_MARKERS) {
             if (marker <= numFrets) {
@@ -138,15 +139,25 @@ public class FretboardDisplayModule implements TrainingModule {
             }
         }
         
-        // Draw strings
-        gc.setStroke(Color.rgb(210, 180, 140)); // Tan/string color
-        gc.setLineWidth(STRING_LINE_WIDTH);
-        
+        // Draw strings - more pronounced with metallic colors
         for (int string = 0; string < numStrings; string++) {
             double y = PADDING + (string * STRING_SPACING);
-            double stringThickness = STRING_LINE_WIDTH + (string * 0.3); // Thicker strings at bottom
+            double stringThickness = BASE_STRING_WIDTH + (string * STRING_WIDTH_INCREMENT);
+            
+            // Draw string shadow for depth
+            gc.setStroke(Color.rgb(40, 40, 40, 0.5));
+            gc.setLineWidth(stringThickness + 1.0);
+            gc.strokeLine(PADDING, y + 1, PADDING + NUT_WIDTH + fretboardWidth, y + 1);
+            
+            // Draw main string with metallic silver color
+            gc.setStroke(Color.rgb(200, 200, 210)); // Bright metallic silver
             gc.setLineWidth(stringThickness);
             gc.strokeLine(PADDING, y, PADDING + NUT_WIDTH + fretboardWidth, y);
+            
+            // Draw string highlight for 3D effect
+            gc.setStroke(Color.rgb(255, 255, 255, 0.6));
+            gc.setLineWidth(Math.max(1.0, stringThickness * 0.3));
+            gc.strokeLine(PADDING, y - (stringThickness * 0.2), PADDING + NUT_WIDTH + fretboardWidth, y - (stringThickness * 0.2));
         }
         
         // Draw fret numbers
