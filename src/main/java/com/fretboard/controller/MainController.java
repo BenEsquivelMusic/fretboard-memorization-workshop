@@ -129,6 +129,9 @@ public final class MainController {
                 // Auto-save the new profile
                 autoSaveNewProfile(dialogResult.userName(), dialogResult.saveLocation());
                 
+                // Refresh the FretboardDisplayModule to reflect the new profile's display configurations
+                refreshModulesWithNewSettings();
+                
                 updateStatus("New profile created for " + dialogResult.userName());
             }
         }
@@ -261,6 +264,9 @@ public final class MainController {
                 
                 updateStatus("Loaded: " + file.getName());
                 initializeAudioIfConfigured();
+                
+                // Refresh the FretboardDisplayModule to reflect the loaded profile's display configurations
+                refreshModulesWithNewSettings();
             } else {
                 showError("Failed to Load", "Could not load the user data file.");
             }
