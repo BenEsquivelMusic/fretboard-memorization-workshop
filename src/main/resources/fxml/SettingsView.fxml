@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.fretboard.controller.SettingsController"
-      spacing="15" prefWidth="450" prefHeight="350"
+      spacing="15" prefWidth="450" prefHeight="400"
       stylesheets="@../css/styles.css" styleClass="settings-pane">
 
     <padding>
@@ -34,6 +34,16 @@
             <Label text="frets (12-36)" styleClass="settings-hint"/>
         </HBox>
         <Label text="Set the number of frets on your guitar" styleClass="settings-hint"/>
+    </VBox>
+
+    <!-- String Count Section -->
+    <VBox spacing="8">
+        <Label text="Number of Strings" styleClass="settings-section-title"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Spinner fx:id="stringCountSpinner" prefWidth="100"/>
+            <Label text="strings (6-8)" styleClass="settings-hint"/>
+        </HBox>
+        <Label text="Set the number of strings on your guitar" styleClass="settings-hint"/>
     </VBox>
 
     <Separator/>
