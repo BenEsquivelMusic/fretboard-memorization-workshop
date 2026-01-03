@@ -18,9 +18,10 @@ public final class UserSettings implements Serializable {
     public static final int MAX_STRING_COUNT = 8;
 
     public static final WoodGrain DEFAULT_WOOD_GRAIN = WoodGrain.ROSEWOOD;
+    public static final boolean DEFAULT_FANNED_FRET = false;
 
     @Serial
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private String guitarInputPort;
     private int numberOfFrets;
     private int numberOfStrings;
@@ -28,6 +29,7 @@ public final class UserSettings implements Serializable {
     private float inputSampleRate;
     private int inputBufferSize;
     private WoodGrain fretboardWoodGrain;
+    private boolean fannedFret;
 
     /**
      * Default constructor with standard guitar settings.
@@ -38,6 +40,7 @@ public final class UserSettings implements Serializable {
         this.inputBufferSize = 4096;
         this.numberOfStrings = DEFAULT_STRING_COUNT;
         this.fretboardWoodGrain = DEFAULT_WOOD_GRAIN;
+        this.fannedFret = DEFAULT_FANNED_FRET;
         validateSettings();
     }
 
@@ -102,6 +105,24 @@ public final class UserSettings implements Serializable {
     }
 
     /**
+     * Returns whether the fretboard uses fanned (multi-scale) frets.
+     *
+     * @return true if fanned fret style is enabled
+     */
+    public boolean isFannedFret() {
+        return fannedFret;
+    }
+
+    /**
+     * Sets whether the fretboard uses fanned (multi-scale) frets.
+     *
+     * @param fannedFret true to enable fanned fret style
+     */
+    public void setFannedFret(boolean fannedFret) {
+        this.fannedFret = fannedFret;
+    }
+
+    /**
      * Checks if the guitar input port has been configured.
      *
      * @return true if a guitar input port is set
@@ -126,6 +147,7 @@ public final class UserSettings implements Serializable {
                 ", numberOfFrets=" + numberOfFrets +
                 ", numberOfStrings=" + numberOfStrings +
                 ", fretboardWoodGrain=" + fretboardWoodGrain +
+                ", fannedFret=" + fannedFret +
                 ", dataSaveLocation='" + dataSaveLocation + '\'' +
                 '}';
     }
