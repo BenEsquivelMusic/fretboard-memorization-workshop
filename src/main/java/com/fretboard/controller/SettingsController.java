@@ -1,18 +1,20 @@
 package com.fretboard.controller;
 
 import com.fretboard.model.UserSettings;
+import com.fretboard.model.WoodGrain;
 import com.fretboard.service.AudioInputService;
 import com.fretboard.service.UserDataService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 import java.util.List;
 import java.util.logging.Logger;
 
 /**
  * Controller for the settings window.
- * Manages guitar input port selection, fret count, and string count configuration.
+ * Manages guitar input port selection, fret count, string count, and wood grain configuration.
  */
 public final class SettingsController {
 
@@ -25,8 +27,8 @@ public final class SettingsController {
     private Spinner<Integer> fretCountSpinner;
     @FXML
     private Spinner<Integer> stringCountSpinner;
-    //@FXML
-    //private TextField saveLocationField;
+    @FXML
+    private ComboBox<WoodGrain> woodGrainComboBox;
     @FXML
     private Button browseButton;
     @FXML
@@ -50,6 +52,7 @@ public final class SettingsController {
     public void initialize() {
         setupFretCountSpinner();
         setupStringCountSpinner();
+        setupWoodGrainComboBox();
         refreshInputPorts();
         loadCurrentSettings();
     }
@@ -68,25 +71,6 @@ public final class SettingsController {
         updateStatus("Audio input ports refreshed");
     }
 
-    /*@FXML
-    public void handleBrowseSaveLocation() {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Select Save Location");
-
-        String currentLocation = saveLocationField.getText();
-        if (currentLocation != null && !currentLocation.isBlank()) {
-            File currentDir = new File(currentLocation);
-            if (currentDir.exists() && currentDir.isDirectory()) {
-                directoryChooser.setInitialDirectory(currentDir);
-            }
-        }
-
-        File selectedDir = directoryChooser.showDialog(stage);
-        if (selectedDir != null) {
-            saveLocationField.setText(selectedDir.getAbsolutePath());
-        }
-    }*/
-
     @FXML
     public void handleSave() {
         if (!validateSettings()) {
@@ -102,11 +86,7 @@ public final class SettingsController {
 
         settings.setNumberOfFrets(fretCountSpinner.getValue());
         settings.setNumberOfStrings(stringCountSpinner.getValue());
-
-        /*String saveLocation = saveLocationField.getText();
-        if (saveLocation != null && !saveLocation.isBlank()) {
-            settings.setDataSaveLocation(saveLocation);
-        }*/
+        settings.setFretboardWoodGrain(woodGrainComboBox.getValue());
 
         userDataService.markAsModified();
         settingsChanged = true;
@@ -176,6 +156,27 @@ public final class SettingsController {
         });
     }
 
+    private void setupWoodGrainComboBox() {
+        woodGrainComboBox.getItems().addAll(WoodGrain.values());
+        woodGrainComboBox.setValue(UserSettings.DEFAULT_WOOD_GRAIN);
+        woodGrainComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(WoodGrain woodGrain) {
+                return woodGrain != null ? woodGrain.getDisplayName() : "";
+            }
+
+            @Override
+            public WoodGrain fromString(String string) {
+                for (WoodGrain wg : WoodGrain.values()) {
+                    if (wg.getDisplayName().equals(string)) {
+                        return wg;
+                    }
+                }
+                return UserSettings.DEFAULT_WOOD_GRAIN;
+            }
+        });
+    }
+
     private void refreshInputPorts() {
         List<String> ports = audioInputService.getAvailableInputPorts();
 
@@ -203,10 +204,7 @@ public final class SettingsController {
 
         fretCountSpinner.getValueFactory().setValue(settings.getNumberOfFrets());
         stringCountSpinner.getValueFactory().setValue(settings.getNumberOfStrings());
-
-        /*if (settings.isSaveLocationConfigured()) {
-            saveLocationField.setText(settings.getDataSaveLocation());
-        }*/
+        woodGrainComboBox.setValue(settings.getFretboardWoodGrain());
     }
 
     private boolean validateSettings() {
