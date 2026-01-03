@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,12 +60,10 @@ public final class FretboardApplication extends Application {
             primaryStage.setMinWidth(MIN_WIDTH);
             primaryStage.setMinHeight(MIN_HEIGHT);
 
-            try {
-                Image icon = new Image(getClass().getResourceAsStream("/images/icon.png"));
-                primaryStage.getIcons().add(icon);
-            } catch (Exception e) {
-                LOGGER.fine("Application icon not found, using default");
-            }
+            primaryStage.getIcons().add(
+                    new Image(
+                            Optional.ofNullable(FretboardApplication.class.getResourceAsStream(ApplicationIcons.APPLICATION_ICON))
+                                    .orElseThrow()));
 
             primaryStage.setOnCloseRequest(event -> {
                 event.consume();

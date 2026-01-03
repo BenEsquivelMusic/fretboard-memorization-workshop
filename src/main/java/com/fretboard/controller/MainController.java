@@ -1,5 +1,7 @@
 package com.fretboard.controller;
 
+import com.fretboard.ApplicationIcons;
+import com.fretboard.FretboardApplication;
 import com.fretboard.model.UserData;
 import com.fretboard.module.TrainingModule;
 import com.fretboard.module.TrainingModuleRegistry;
@@ -11,6 +13,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -139,6 +142,11 @@ public final class MainController {
             settingsStage.initOwner(primaryStage);
             settingsStage.setScene(new Scene(settingsRoot));
             settingsStage.setResizable(false);
+
+            settingsStage.getIcons().add(
+                    new Image(
+                            Optional.ofNullable(FretboardApplication.class.getResourceAsStream(ApplicationIcons.SETTINGS_ICON))
+                                    .orElseThrow()));
 
             settingsController.setStage(settingsStage);
 

@@ -4,6 +4,7 @@ module com.fretboard {
     requires javafx.graphics;
     requires java.desktop;
     requires java.logging;
+    requires jdk.compiler;
 
     opens com.fretboard to javafx.fxml;
     opens com.fretboard.controller to javafx.fxml;
