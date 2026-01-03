@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 /**
  * Controller for the settings window.
- * Manages guitar input port selection and fret count configuration.
+ * Manages guitar input port selection, fret count, and string count configuration.
  */
 public final class SettingsController {
 
@@ -23,6 +23,8 @@ public final class SettingsController {
     private ComboBox<String> inputPortComboBox;
     @FXML
     private Spinner<Integer> fretCountSpinner;
+    @FXML
+    private Spinner<Integer> stringCountSpinner;
     //@FXML
     //private TextField saveLocationField;
     @FXML
@@ -47,6 +49,7 @@ public final class SettingsController {
     @FXML
     public void initialize() {
         setupFretCountSpinner();
+        setupStringCountSpinner();
         refreshInputPorts();
         loadCurrentSettings();
     }
@@ -98,6 +101,7 @@ public final class SettingsController {
         }
 
         settings.setNumberOfFrets(fretCountSpinner.getValue());
+        settings.setNumberOfStrings(stringCountSpinner.getValue());
 
         /*String saveLocation = saveLocationField.getText();
         if (saveLocation != null && !saveLocation.isBlank()) {
@@ -156,6 +160,22 @@ public final class SettingsController {
         });
     }
 
+    private void setupStringCountSpinner() {
+        SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+                UserSettings.MIN_STRING_COUNT,
+                UserSettings.MAX_STRING_COUNT,
+                UserSettings.DEFAULT_STRING_COUNT
+        );
+        stringCountSpinner.setValueFactory(valueFactory);
+        stringCountSpinner.setEditable(true);
+
+        stringCountSpinner.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                stringCountSpinner.getEditor().setText(oldValue);
+            }
+        });
+    }
+
     private void refreshInputPorts() {
         List<String> ports = audioInputService.getAvailableInputPorts();
 
@@ -182,6 +202,7 @@ public final class SettingsController {
         }
 
         fretCountSpinner.getValueFactory().setValue(settings.getNumberOfFrets());
+        stringCountSpinner.getValueFactory().setValue(settings.getNumberOfStrings());
 
         /*if (settings.isSaveLocationConfigured()) {
             saveLocationField.setText(settings.getDataSaveLocation());
@@ -202,6 +223,14 @@ public final class SettingsController {
             showWarning("Invalid Fret Count",
                     "Fret count must be between " + UserSettings.MIN_FRET_COUNT +
                             " and " + UserSettings.MAX_FRET_COUNT + ".");
+            return false;
+        }
+
+        Integer stringCount = stringCountSpinner.getValue();
+        if (stringCount == null || stringCount < UserSettings.MIN_STRING_COUNT || stringCount > UserSettings.MAX_STRING_COUNT) {
+            showWarning("Invalid String Count",
+                    "String count must be between " + UserSettings.MIN_STRING_COUNT +
+                            " and " + UserSettings.MAX_STRING_COUNT + ".");
             return false;
         }
 
