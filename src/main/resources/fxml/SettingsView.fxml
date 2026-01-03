@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.fretboard.controller.SettingsController"
-      spacing="15" prefWidth="450" prefHeight="480"
+      spacing="15" prefWidth="450" prefHeight="540"
       stylesheets="@../css/styles.css" styleClass="settings-pane">
 
     <padding>
@@ -53,6 +53,15 @@
             <ComboBox fx:id="woodGrainComboBox" prefWidth="200"/>
         </HBox>
         <Label text="Select the wood grain appearance for the fretboard display" styleClass="settings-hint"/>
+    </VBox>
+
+    <!-- Fretboard Style Section -->
+    <VBox spacing="8">
+        <Label text="Fretboard Style" styleClass="settings-section-title"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <ComboBox fx:id="fretboardStyleComboBox" prefWidth="200"/>
+        </HBox>
+        <Label text="Select standard or fanned (multi-scale) fret layout" styleClass="settings-hint"/>
     </VBox>
 
     <Separator/>
