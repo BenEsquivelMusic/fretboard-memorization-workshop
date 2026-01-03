@@ -2,6 +2,7 @@ package com.fretboard.controller;
 
 import com.fretboard.ApplicationIcons;
 import com.fretboard.model.UserData;
+import com.fretboard.module.FretboardDisplayModule;
 import com.fretboard.module.TrainingModule;
 import com.fretboard.module.TrainingModuleRegistry;
 import com.fretboard.service.AudioInputService;
@@ -56,8 +57,23 @@ public final class MainController {
 
     @FXML
     public void initialize() {
+        registerTrainingModules();
         updateModuleList();
         updateStatus("Ready");
+    }
+
+    /**
+     * Registers all available training modules with the registry.
+     */
+    private void registerTrainingModules() {
+        UserData userData = userDataService.getCurrentUserData();
+        
+        // Register the Fretboard Display Module
+        if (!moduleRegistry.isModuleRegistered("fretboard-display")) {
+            moduleRegistry.registerModule(new FretboardDisplayModule(userData.getSettings()));
+        }
+        
+        // Additional modules can be registered here in the future
     }
 
     public void setPrimaryStage(Stage primaryStage) {
@@ -153,12 +169,35 @@ public final class MainController {
 
             if (settingsController.isSettingsChanged()) {
                 initializeAudioIfConfigured();
+                refreshModulesWithNewSettings();
                 updateStatus("Settings updated");
             }
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Failed to open settings", e);
             showError("Error", "Could not open settings window.");
+        }
+    }
+
+    /**
+     * Refreshes training modules when user settings change.
+     * This recreates modules that depend on settings like fret count or string count.
+     */
+    private void refreshModulesWithNewSettings() {
+        UserData userData = userDataService.getCurrentUserData();
+        
+        // Unregister and re-register the FretboardDisplayModule with new settings
+        if (moduleRegistry.isModuleRegistered("fretboard-display")) {
+            moduleRegistry.unregisterModule("fretboard-display");
+            moduleRegistry.registerModule(new FretboardDisplayModule(userData.getSettings()));
+        }
+        
+        // Update the module list in the UI
+        updateModuleList();
+        
+        // If the fretboard display module was active, re-select it
+        if (activeModule != null && "fretboard-display".equals(activeModule.getModuleId())) {
+            moduleRegistry.getModule("fretboard-display").ifPresent(this::selectModule);
         }
     }
 
