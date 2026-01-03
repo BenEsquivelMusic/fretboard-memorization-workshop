@@ -92,6 +92,7 @@ public class FretboardDisplayModule implements TrainingModule {
     
     // Frequency display state
     private boolean showFrequencies = false;
+    private boolean showOctave = true;
     private Frequency selectedFrequency = null;
     private int selectedStringIndex = -1;
     private int selectedFretIndex = -1;
@@ -142,7 +143,7 @@ public class FretboardDisplayModule implements TrainingModule {
         controlsBox.setAlignment(Pos.CENTER);
         controlsBox.setPadding(new Insets(10, 0, 0, 0));
         
-        CheckBox showFrequenciesCheckBox = new CheckBox("Show Frequencies");
+        CheckBox showFrequenciesCheckBox = new CheckBox("Show Notes");
         showFrequenciesCheckBox.setStyle("-fx-text-fill: white;");
         showFrequenciesCheckBox.setSelected(showFrequencies);
         showFrequenciesCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
@@ -153,7 +154,15 @@ public class FretboardDisplayModule implements TrainingModule {
             renderFretboard();
         });
         
-        controlsBox.getChildren().add(showFrequenciesCheckBox);
+        CheckBox showOctaveCheckBox = new CheckBox("Show Octave");
+        showOctaveCheckBox.setStyle("-fx-text-fill: white;");
+        showOctaveCheckBox.setSelected(showOctave);
+        showOctaveCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            showOctave = newVal;
+            renderFretboard();
+        });
+        
+        controlsBox.getChildren().addAll(showFrequenciesCheckBox, showOctaveCheckBox);
         
         headerBox.getChildren().addAll(titleText, descriptionText, settingsInfo, controlsBox);
         rootPane.setTop(headerBox);
@@ -549,7 +558,9 @@ public class FretboardDisplayModule implements TrainingModule {
     private void drawFrequencyLabel(GraphicsContext gc, Frequency frequency, double x, double y,
             double fontSize, double scale, int stringIndex, int fretIndex) {
         
-        String label = frequency.note().getDisplayNote() + frequency.octaveNumber();
+        // Determine label text based on showOctave setting
+        String label = showOctave ? frequency.note().getDisplayNote() + frequency.octaveNumber() 
+                                  : frequency.note().getDisplayNote();
         double labelWidth = label.length() * fontSize * 0.6;
         double labelHeight = fontSize * 1.2;
         
@@ -557,9 +568,19 @@ public class FretboardDisplayModule implements TrainingModule {
         double labelX = x - (labelWidth / 2);
         double labelY = y - (labelHeight / 2);
         
-        // Store click region
+        // Store click region (always stored, even if label not drawn)
         frequencyClickRegions.add(new FrequencyClickRegion(
                 labelX, labelY, labelWidth, labelHeight, frequency, stringIndex, fretIndex));
+        
+        // Check if we should skip drawing this label
+        if (selectedFrequency != null) {
+            boolean isSelected = (stringIndex == selectedStringIndex && fretIndex == selectedFretIndex);
+            boolean isMatchingNote = (frequency.note() == selectedFrequency.note());
+            if (!isSelected && !isMatchingNote) {
+                // Still store click region but don't draw the label
+                return;
+            }
+        }
         
         // Determine background color based on selection
         Color bgColor;
