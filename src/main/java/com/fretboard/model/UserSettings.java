@@ -21,7 +21,8 @@ public final class UserSettings implements Serializable {
     public static final boolean DEFAULT_FANNED_FRET = false;
 
     @Serial
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
+    private String userName;
     private String guitarInputPort;
     private int numberOfFrets;
     private int numberOfStrings;
@@ -45,6 +46,14 @@ public final class UserSettings implements Serializable {
     }
 
     // Getters and setters
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     public String getGuitarInputPort() {
         return guitarInputPort;
@@ -140,10 +149,20 @@ public final class UserSettings implements Serializable {
         return dataSaveLocation != null && !dataSaveLocation.isBlank();
     }
 
+    /**
+     * Checks if the user name has been configured.
+     *
+     * @return true if a user name is set
+     */
+    public boolean isUserNameConfigured() {
+        return userName != null && !userName.isBlank();
+    }
+
     @Override
     public String toString() {
         return "UserSettings{" +
-                "guitarInputPort='" + guitarInputPort + '\'' +
+                "userName='" + userName + '\'' +
+                ", guitarInputPort='" + guitarInputPort + '\'' +
                 ", numberOfFrets=" + numberOfFrets +
                 ", numberOfStrings=" + numberOfStrings +
                 ", fretboardWoodGrain=" + fretboardWoodGrain +

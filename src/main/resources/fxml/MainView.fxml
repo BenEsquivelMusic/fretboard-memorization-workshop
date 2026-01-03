@@ -14,8 +14,8 @@
                 <MenuItem text="New" onAction="#handleNewFile" accelerator="Ctrl+N"/>
                 <MenuItem text="Open..." onAction="#handleOpenFile" accelerator="Ctrl+O"/>
                 <SeparatorMenuItem/>
-                <MenuItem text="Save" onAction="#handleSaveFile" accelerator="Ctrl+S"/>
-                <MenuItem text="Save As..." onAction="#handleSaveFileAs" accelerator="Ctrl+Shift+S"/>
+                <MenuItem fx:id="saveMenuItem" text="Save" onAction="#handleSaveFile" accelerator="Ctrl+S" disable="true"/>
+                <MenuItem fx:id="saveAsMenuItem" text="Save As..." onAction="#handleSaveFileAs" accelerator="Ctrl+Shift+S" disable="true"/>
                 <SeparatorMenuItem/>
                 <MenuItem text="Exit" onAction="#handleExit" accelerator="Alt+F4"/>
             </Menu>
