@@ -1,7 +1,3 @@
-/**
- * Module descriptor for the Fretboard Memorization Workshop application.
- * Configures JavaFX dependencies and FXML controller injection.
- */
 module com.fretboard {
     requires javafx.controls;
     requires javafx.fxml;
@@ -18,4 +14,6 @@ module com.fretboard {
     exports com.fretboard.model;
     exports com.fretboard.module;
     exports com.fretboard.service;
+    exports com.fretboard.model.string;
+    opens com.fretboard.model.string to javafx.fxml;
 }

@@ -21,6 +21,7 @@ public final class UserSettings implements Serializable {
     private static final long serialVersionUID = 1L;
     private String guitarInputPort;
     private int numberOfFrets;
+    private int numberOfStrings;
     private String dataSaveLocation;
     private float inputSampleRate;
     private int inputBufferSize;
@@ -32,20 +33,8 @@ public final class UserSettings implements Serializable {
         this.numberOfFrets = DEFAULT_FRET_COUNT;
         this.inputSampleRate = 44100.0f;
         this.inputBufferSize = 4096;
-    }
-
-    /**
-     * Creates user settings with specified values.
-     *
-     * @param guitarInputPort  the audio input port for the guitar
-     * @param numberOfFrets    the number of frets on the guitar (12-36)
-     * @param dataSaveLocation the location to save user data
-     */
-    public UserSettings(String guitarInputPort, int numberOfFrets, String dataSaveLocation) {
-        this();
-        this.guitarInputPort = guitarInputPort;
-        setNumberOfFrets(numberOfFrets);
-        this.dataSaveLocation = dataSaveLocation;
+        this.numberOfStrings = DEFAULT_STRING_COUNT;
+        validateSettings();
     }
 
     // Getters and setters
@@ -62,13 +51,18 @@ public final class UserSettings implements Serializable {
         return numberOfFrets;
     }
 
-    /**
-     * Sets the number of frets, clamping the value between MIN_FRET_COUNT and MAX_FRET_COUNT.
-     *
-     * @param numberOfFrets the number of frets (will be clamped to valid range)
-     */
     public void setNumberOfFrets(int numberOfFrets) {
-        this.numberOfFrets = Math.max(MIN_FRET_COUNT, Math.min(MAX_FRET_COUNT, numberOfFrets));
+        validateFretCount(numberOfFrets);
+        this.numberOfFrets = numberOfFrets;
+    }
+
+    public int getNumberOfStrings() {
+        return numberOfStrings;
+    }
+
+    public void setNumberOfStrings(int numberOfStrings) {
+        validateStringCount(numberOfStrings);
+        this.numberOfStrings = numberOfStrings;
     }
 
     public String getDataSaveLocation() {
@@ -120,5 +114,22 @@ public final class UserSettings implements Serializable {
                 ", numberOfFrets=" + numberOfFrets +
                 ", dataSaveLocation='" + dataSaveLocation + '\'' +
                 '}';
+    }
+
+    private void validateSettings() {
+        validateFretCount(numberOfFrets);
+        validateStringCount(numberOfStrings);
+    }
+
+    private void validateFretCount(int fretCount) {
+        if (fretCount < MIN_FRET_COUNT || fretCount > MAX_FRET_COUNT) {
+            throw new IllegalArgumentException("Invalid fret count provided: " + fretCount);
+        }
+    }
+
+    private void validateStringCount(int stringCount) {
+        if (stringCount < MIN_STRING_COUNT || stringCount > MAX_STRING_COUNT) {
+            throw new IllegalArgumentException("Invalid string count provided: " + stringCount);
+        }
     }
 }

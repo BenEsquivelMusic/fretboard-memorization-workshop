@@ -1,5 +1,11 @@
 package com.fretboard.model;
 
+import com.fretboard.constants.FretBoardConstants;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+
 public enum Note {
 
     C("C"),
@@ -15,7 +21,6 @@ public enum Note {
     A_("A♯/B♭"),
     B("B");
 
-
     private final String displayNote;
 
     Note(String displayNote) {
@@ -24,6 +29,17 @@ public enum Note {
 
     public String getDisplayNote() {
         return displayNote;
+    }
+
+    public LinkedHashSet<Note> getOrderedNotes() {
+        Note[] naturalOrder = values();
+        if (C.equals(this)) return new LinkedHashSet<>(Arrays.asList(naturalOrder));
+        Note[] firstNoteGroup = Arrays.copyOfRange(naturalOrder, ordinal(), naturalOrder.length);
+        Note[] lastNoteGroup = Arrays.copyOfRange(naturalOrder, 0, ordinal());
+        LinkedHashSet<Note> orderedNotes = new LinkedHashSet<>(FretBoardConstants.MAX_NOTES_IN_OCTAVE);
+        Collections.addAll(orderedNotes, firstNoteGroup);
+        Collections.addAll(orderedNotes, lastNoteGroup);
+        return orderedNotes;
     }
 
 }

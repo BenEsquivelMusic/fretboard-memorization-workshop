@@ -21,11 +21,11 @@ public final class FrequencyMapService {
         MemorySegment parentSegment = globalArena.allocate(DOUBLE_VALUE_LAYOUT, totalSize);
 
         int currentOctave = 0;
-        int offset = 0;
+        long offset = 0;
         while (currentOctave < FretBoardConstants.MAX_AUDIBLE_OCTAVES) {
-            noteFrequenciesByOctave[currentOctave] = parentSegment.asSlice(offset, FretBoardConstants.MAX_NOTES_IN_OCTAVE);
+            noteFrequenciesByOctave[currentOctave] = parentSegment.asSlice(offset * DOUBLE_VALUE_LAYOUT.byteSize(), FretBoardConstants.MAX_NOTES_IN_OCTAVE * DOUBLE_VALUE_LAYOUT.byteSize());
             ++currentOctave;
-            offset += FretBoardConstants.MAX_NOTES_IN_OCTAVE;
+            offset += FretBoardConstants.MAX_AUDIBLE_OCTAVES;
         }
         mapFrequencies();
     }

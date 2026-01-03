@@ -1,12 +1,24 @@
-package com.fretboard.model;
+package com.fretboard.model.string;
 
 import com.fretboard.constants.FretBoardConstants;
+import com.fretboard.model.Frequency;
+import com.fretboard.model.FrequencyRange;
+import com.fretboard.model.Note;
+import com.fretboard.model.UserSettings;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 
-public final class GuitarString {
+public sealed abstract class GuitarString permits
+        AString,
+        DString,
+        HighBString,
+        HighEString,
+        HighGString,
+        LowBString,
+        LowEString,
+        LowGString {
 
     private final byte stringNumber;
     private final Frequency openString;
@@ -16,8 +28,8 @@ public final class GuitarString {
                         byte numFrets,
                         Frequency openFrequency,
                         LinkedHashSet<Note> orderedNotes) {
-        if (stringNum < UserSettings.MIN_STRING_COUNT || stringNum > UserSettings.MAX_STRING_COUNT) {
-            throw new IllegalArgumentException("Invalid string count provided: " + stringNum);
+        if (stringNum <= 0 || stringNum > UserSettings.MAX_STRING_COUNT) {
+            throw new IllegalArgumentException("Invalid string number provided: " + stringNum);
         }
         if (numFrets < UserSettings.MIN_FRET_COUNT || numFrets > UserSettings.MAX_FRET_COUNT) {
             throw new IllegalArgumentException("Invalid fret count provided: " + numFrets);
