@@ -2,6 +2,7 @@ package com.fretboard.module;
 
 import com.fretboard.model.TrainingModuleProgress;
 import com.fretboard.model.UserSettings;
+import com.fretboard.model.WoodGrain;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -15,7 +16,7 @@ import javafx.scene.text.Text;
 
 /**
  * Training module that displays a simple guitar fretboard visualization.
- * The fretboard is rendered based on the user's configured number of strings and frets.
+ * The fretboard is rendered based on the user's configured number of strings, frets, and wood grain.
  */
 public class FretboardDisplayModule implements TrainingModule {
 
@@ -32,6 +33,8 @@ public class FretboardDisplayModule implements TrainingModule {
     private static final double PADDING = 40.0;
     private static final double FRET_MARKER_RADIUS = 6.0;
 
+    private static final Color CANVAS_BACKGROUND_COLOR = Color.rgb(25, 25, 28);
+
     private static final int[] SINGLE_FRET_MARKERS = {3, 5, 7, 9, 15, 17, 19, 21};
     private static final int[] DOUBLE_FRET_MARKERS = {12, 24};
 
@@ -44,7 +47,7 @@ public class FretboardDisplayModule implements TrainingModule {
     /**
      * Creates a new FretboardDisplayModule with the given user settings.
      *
-     * @param userSettings the user settings containing fret and string configuration
+     * @param userSettings the user settings containing fret, string, and wood grain configuration
      */
     public FretboardDisplayModule(UserSettings userSettings) {
         this.userSettings = userSettings;
@@ -55,6 +58,7 @@ public class FretboardDisplayModule implements TrainingModule {
     private void initializeUI() {
         rootPane = new BorderPane();
         rootPane.setPadding(new Insets(20));
+        rootPane.setStyle("-fx-background-color: #191920;");
 
         // Title section
         VBox headerBox = new VBox(10);
@@ -62,13 +66,17 @@ public class FretboardDisplayModule implements TrainingModule {
         
         Text titleText = new Text(MODULE_NAME);
         titleText.setFont(Font.font("System", 24));
+        titleText.setFill(Color.WHITE);
         
         Text descriptionText = new Text(MODULE_DESCRIPTION);
         descriptionText.setFont(Font.font("System", 14));
+        descriptionText.setFill(Color.LIGHTGRAY);
         
-        Text settingsInfo = new Text(String.format("Strings: %d | Frets: %d", 
+        WoodGrain woodGrain = userSettings.getFretboardWoodGrain();
+        Text settingsInfo = new Text(String.format("Strings: %d | Frets: %d | Wood: %s", 
                 userSettings.getNumberOfStrings(), 
-                userSettings.getNumberOfFrets()));
+                userSettings.getNumberOfFrets(),
+                woodGrain.getDisplayName()));
         settingsInfo.setFont(Font.font("System", 12));
         settingsInfo.setFill(Color.GRAY);
         
@@ -83,6 +91,7 @@ public class FretboardDisplayModule implements TrainingModule {
         
         VBox canvasContainer = new VBox(fretboardCanvas);
         canvasContainer.setAlignment(Pos.CENTER);
+        canvasContainer.setStyle("-fx-background-color: #191920;");
         rootPane.setCenter(canvasContainer);
 
         renderFretboard();
@@ -100,16 +109,17 @@ public class FretboardDisplayModule implements TrainingModule {
         GraphicsContext gc = fretboardCanvas.getGraphicsContext2D();
         int numFrets = userSettings.getNumberOfFrets();
         int numStrings = userSettings.getNumberOfStrings();
+        WoodGrain woodGrain = userSettings.getFretboardWoodGrain();
         
         double fretboardWidth = numFrets * FRET_WIDTH;
         double fretboardHeight = (numStrings - 1) * STRING_SPACING;
         
-        // Clear canvas
-        gc.clearRect(0, 0, fretboardCanvas.getWidth(), fretboardCanvas.getHeight());
+        // Clear canvas with dark background
+        gc.setFill(CANVAS_BACKGROUND_COLOR);
+        gc.fillRect(0, 0, fretboardCanvas.getWidth(), fretboardCanvas.getHeight());
         
-        // Draw fretboard background - darker rosewood color
-        gc.setFill(Color.rgb(62, 39, 35)); // Dark rosewood brown
-        gc.fillRect(PADDING, PADDING, fretboardWidth + NUT_WIDTH, fretboardHeight);
+        // Draw fretboard background with wood grain colors
+        drawWoodGrainBackground(gc, woodGrain, fretboardWidth, fretboardHeight);
         
         // Draw nut (the zero fret)
         gc.setFill(Color.rgb(245, 245, 220)); // Bone/ivory color
@@ -161,7 +171,7 @@ public class FretboardDisplayModule implements TrainingModule {
         }
         
         // Draw fret numbers
-        gc.setFill(Color.BLACK);
+        gc.setFill(Color.LIGHTGRAY);
         gc.setFont(Font.font("System", 10));
         
         for (int fret = 1; fret <= numFrets; fret++) {
@@ -173,6 +183,28 @@ public class FretboardDisplayModule implements TrainingModule {
         
         // Draw "Open" label
         gc.fillText("0", PADDING + (NUT_WIDTH / 2) - 3, PADDING + fretboardHeight + 15);
+    }
+
+    private void drawWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, double fretboardHeight) {
+        Color primaryColor = woodGrain.getPrimaryColor();
+        Color secondaryColor = woodGrain.getSecondaryColor();
+        
+        // Draw base wood color
+        gc.setFill(primaryColor);
+        gc.fillRect(PADDING, PADDING, fretboardWidth + NUT_WIDTH, fretboardHeight);
+        
+        // Draw subtle wood grain lines for texture
+        gc.setStroke(secondaryColor);
+        gc.setLineWidth(1.0);
+        
+        double grainSpacing = 8.0;
+        for (double y = PADDING; y < PADDING + fretboardHeight; y += grainSpacing) {
+            // Add slight variation to make it look more natural
+            double offset = Math.sin(y * 0.1) * 2;
+            gc.setGlobalAlpha(0.3);
+            gc.strokeLine(PADDING + offset, y, PADDING + NUT_WIDTH + fretboardWidth + offset, y);
+        }
+        gc.setGlobalAlpha(1.0);
     }
 
     private void drawSingleFretMarker(GraphicsContext gc, int fret, int numStrings, double fretboardHeight) {
