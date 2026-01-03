@@ -2,6 +2,7 @@ package com.fretboard.controller;
 
 import com.fretboard.ApplicationIcons;
 import com.fretboard.model.UserData;
+import com.fretboard.model.UserSettings;
 import com.fretboard.module.FretboardDisplayModule;
 import com.fretboard.module.TrainingModule;
 import com.fretboard.module.TrainingModuleRegistry;
@@ -10,12 +11,15 @@ import com.fretboard.service.UserDataService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -83,10 +87,100 @@ public final class MainController {
     @FXML
     public void handleNewFile() {
         if (confirmUnsavedChanges()) {
-            userDataService.createNewUserData();
-            updateStatus("New file created");
+            // Show dialog to prompt for user name and save location
+            Optional<NewFileDialogResult> result = showNewFileDialog();
+            if (result.isPresent()) {
+                NewFileDialogResult dialogResult = result.get();
+                userDataService.createNewUserData();
+                
+                // Store the user's name and save location in UserSettings
+                UserData userData = userDataService.getCurrentUserData();
+                UserSettings settings = userData.getSettings();
+                settings.setUserName(dialogResult.userName());
+                settings.setDataSaveLocation(dialogResult.saveLocation());
+                
+                updateStatus("New file created for " + dialogResult.userName());
+            }
         }
     }
+
+    /**
+     * Shows a dialog to prompt the user for their name and save location.
+     *
+     * @return an Optional containing the dialog result if the user confirmed, empty otherwise
+     */
+    private Optional<NewFileDialogResult> showNewFileDialog() {
+        Dialog<NewFileDialogResult> dialog = new Dialog<>();
+        dialog.setTitle("New User Profile");
+        dialog.setHeaderText("Enter your information to create a new profile");
+        dialog.initOwner(primaryStage);
+        dialog.initModality(Modality.APPLICATION_MODAL);
+
+        // Set the button types
+        ButtonType createButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(createButtonType, ButtonType.CANCEL);
+
+        // Create the form fields
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Your name");
+        
+        TextField saveLocationField = new TextField();
+        saveLocationField.setPromptText("Select a folder...");
+        saveLocationField.setEditable(false);
+        
+        Button browseButton = new Button("Browse...");
+        browseButton.setOnAction(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select Save Location");
+            File selectedDirectory = directoryChooser.showDialog(dialog.getOwner());
+            if (selectedDirectory != null) {
+                saveLocationField.setText(selectedDirectory.getAbsolutePath());
+            }
+        });
+
+        grid.add(new Label("Name:"), 0, 0);
+        grid.add(nameField, 1, 0);
+        grid.add(new Label("Save Location:"), 0, 1);
+        grid.add(saveLocationField, 1, 1);
+        grid.add(browseButton, 2, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Enable/Disable the create button depending on whether fields are filled
+        javafx.scene.Node createButton = dialog.getDialogPane().lookupButton(createButtonType);
+        createButton.setDisable(true);
+
+        // Validation: enable button only when both fields have content
+        nameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            createButton.setDisable(newValue.trim().isEmpty() || saveLocationField.getText().isEmpty());
+        });
+        saveLocationField.textProperty().addListener((observable, oldValue, newValue) -> {
+            createButton.setDisable(nameField.getText().trim().isEmpty() || newValue.isEmpty());
+        });
+
+        // Request focus on the name field by default
+        Platform.runLater(nameField::requestFocus);
+
+        // Convert the result to NewFileDialogResult when the create button is clicked
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == createButtonType) {
+                return new NewFileDialogResult(nameField.getText().trim(), saveLocationField.getText());
+            }
+            return null;
+        });
+
+        return dialog.showAndWait();
+    }
+
+    /**
+     * Record to hold the result of the new file dialog.
+     */
+    private record NewFileDialogResult(String userName, String saveLocation) {}
 
     @FXML
     public void handleOpenFile() {
