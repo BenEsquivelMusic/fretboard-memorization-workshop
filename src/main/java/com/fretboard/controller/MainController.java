@@ -1,7 +1,6 @@
 package com.fretboard.controller;
 
 import com.fretboard.ApplicationIcons;
-import com.fretboard.FretboardApplication;
 import com.fretboard.model.UserData;
 import com.fretboard.module.TrainingModule;
 import com.fretboard.module.TrainingModuleRegistry;
@@ -145,7 +144,7 @@ public final class MainController {
 
             settingsStage.getIcons().add(
                     new Image(
-                            Optional.ofNullable(FretboardApplication.class.getResourceAsStream(ApplicationIcons.SETTINGS_ICON))
+                            Optional.ofNullable(MainController.class.getResourceAsStream(ApplicationIcons.SETTINGS_ICON))
                                     .orElseThrow()));
 
             settingsController.setStage(settingsStage);
