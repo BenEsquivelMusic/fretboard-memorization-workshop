@@ -21,6 +21,11 @@ import javafx.scene.layout.VBox;
  * The rendering starts at a small default size suitable for small screens and dynamically
  * scales up to fit the available canvas window size.
  * Supports both standard and fanned-fret (multi-scale) fretboard styles.
+ * 
+ * For fanned frets, the rendering mimics real multi-scale guitars where:
+ * - A "neutral fret" (typically around fret 7-9) is perpendicular to the strings
+ * - Frets toward the nut angle in one direction (bass side extends further toward headstock)
+ * - Frets toward the bridge angle in the opposite direction (bass side extends further toward bridge)
  */
 public class FretboardDisplayModule implements TrainingModule {
 
@@ -45,6 +50,13 @@ public class FretboardDisplayModule implements TrainingModule {
     // Fanned fret configuration - the angle creates a fan effect across the fretboard
     // This represents how much the fret slants per string (in pixels at base scale)
     private static final double BASE_FAN_OFFSET_PER_STRING = 3.0;
+    
+    // The neutral fret ratio determines where the perpendicular fret is located.
+    // On real multi-scale guitars like Strandberg, Dingwall, and Kiesel, this is typically
+    // around fret 7-9 (roughly 35% of the way down a 24-fret neck).
+    // At the neutral fret, the fret line is perpendicular to the strings.
+    // Frets before it angle one way, frets after angle the other way.
+    private static final double NEUTRAL_FRET_RATIO = 0.35;
 
     // Slightly lighter canvas background to blend better with the guitar
     private static final Color CANVAS_BACKGROUND_COLOR = Color.rgb(42, 42, 50);
@@ -88,7 +100,7 @@ public class FretboardDisplayModule implements TrainingModule {
         descriptionText.setFill(Color.LIGHTGRAY);
         
         WoodGrain woodGrain = userSettings.getFretboardWoodGrain();
-        String fretStyle = userSettings.isFannedFret() ? "Fanned" : "Standard";
+        String fretStyle = userSettings.isFannedFret() ? "Fanned (Multi-Scale)" : "Standard";
         Text settingsInfo = new Text(String.format("Strings: %d | Frets: %d | Wood: %s | Style: %s", 
                 userSettings.getNumberOfStrings(), 
                 userSettings.getNumberOfFrets(),
@@ -124,7 +136,10 @@ public class FretboardDisplayModule implements TrainingModule {
      * Uses small default dimensions suitable for small screens.
      */
     private double calculateBaseCanvasWidth() {
-        return (userSettings.getNumberOfFrets() * BASE_FRET_WIDTH) + BASE_NUT_WIDTH + (BASE_PADDING * 2);
+        // Add extra width for fanned frets to accommodate the angled bridge end
+        double extraWidth = userSettings.isFannedFret() ? 
+                BASE_FAN_OFFSET_PER_STRING * (userSettings.getNumberOfStrings() - 1) : 0;
+        return (userSettings.getNumberOfFrets() * BASE_FRET_WIDTH) + BASE_NUT_WIDTH + (BASE_PADDING * 2) + extraWidth;
     }
 
     /**
@@ -179,6 +194,50 @@ public class FretboardDisplayModule implements TrainingModule {
         double currentWidth = fretboardCanvas.getWidth();
         return currentWidth / baseWidth;
     }
+    
+    /**
+     * Calculates the fan offset for a given fret position relative to the neutral fret.
+     * The neutral fret (determined by NEUTRAL_FRET_RATIO) has zero offset and is perpendicular.
+     * Frets before the neutral fret have negative offset (angled toward headstock on bass side).
+     * Frets after the neutral fret have positive offset (angled toward bridge on bass side).
+     * 
+     * @param fretPosition the fret position (can be fractional for positions between frets)
+     * @param numFrets total number of frets
+     * @param fanOffsetPerString the maximum fan offset per string at full scale
+     * @param numStrings number of strings
+     * @return the fan offset in pixels (positive = bass side toward bridge, negative = bass side toward nut)
+     */
+    private double calculateFanOffset(double fretPosition, int numFrets, double fanOffsetPerString, int numStrings) {
+        double neutralFret = numFrets * NEUTRAL_FRET_RATIO;
+        double distanceFromNeutral = fretPosition - neutralFret;
+        // Normalize to range [-1, 1] based on distance from neutral fret
+        double normalizedDistance = distanceFromNeutral / (numFrets * (1 - NEUTRAL_FRET_RATIO));
+        return normalizedDistance * fanOffsetPerString * (numStrings - 1);
+    }
+    
+    /**
+     * Calculates the X coordinate for a point on a fanned fret line at a given string position.
+     * 
+     * @param fret the fret number
+     * @param stringIndex the string index (0 = top/treble string, numStrings-1 = bottom/bass string)
+     * @param padding canvas padding
+     * @param nutWidth width of the nut
+     * @param fretWidth width of each fret space
+     * @param numFrets total number of frets
+     * @param fanOffsetPerString fan offset per string
+     * @param numStrings number of strings
+     * @return X coordinate for the fret at the given string position
+     */
+    private double calculateFannedFretX(double fret, int stringIndex, double padding, double nutWidth,
+            double fretWidth, int numFrets, double fanOffsetPerString, int numStrings) {
+        // Base X position (as if it were a standard fret)
+        double baseX = padding + nutWidth + (fret * fretWidth);
+        // Calculate fan offset for this fret
+        double fanOffset = calculateFanOffset(fret, numFrets, fanOffsetPerString, numStrings);
+        // Apply offset proportionally based on string position (0 at top, full at bottom)
+        double stringProgress = (double) stringIndex / (numStrings - 1);
+        return baseX + (fanOffset * stringProgress);
+    }
 
     private void renderFretboard() {
         GraphicsContext gc = fretboardCanvas.getGraphicsContext2D();
@@ -222,9 +281,11 @@ public class FretboardDisplayModule implements TrainingModule {
         gc.setFill(Color.rgb(245, 245, 220)); // Bone/ivory color
         if (isFannedFret) {
             // Draw angled nut for fanned frets
-            double nutTopX = padding;
-            double nutBottomX = padding + (fanOffsetPerString * (numStrings - 1) * 0.3); // Slight angle at nut
-            double[] xPoints = {nutTopX, nutTopX + nutWidth, nutBottomX + nutWidth, nutBottomX};
+            // Calculate the fan offset at fret 0
+            double nutFanOffset = calculateFanOffset(0, numFrets, fanOffsetPerString, numStrings);
+            double nutTopX = padding + nutWidth;
+            double nutBottomX = padding + nutWidth + nutFanOffset;
+            double[] xPoints = {padding, nutTopX, nutBottomX, padding + nutFanOffset};
             double[] yPoints = {padding, padding, padding + fretboardHeight, padding + fretboardHeight};
             gc.fillPolygon(xPoints, yPoints, 4);
         } else {
@@ -237,11 +298,9 @@ public class FretboardDisplayModule implements TrainingModule {
         
         for (int fret = 1; fret <= numFrets; fret++) {
             if (isFannedFret) {
-                // Calculate fanned fret positions
-                // The fan angle increases progressively from nut to bridge
-                double fanProgress = (double) fret / numFrets;
-                double topX = padding + nutWidth + (fret * fretWidth);
-                double bottomX = topX + (fanOffsetPerString * (numStrings - 1) * fanProgress);
+                // Calculate fanned fret positions using the neutral fret concept
+                double topX = calculateFannedFretX(fret, 0, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+                double bottomX = calculateFannedFretX(fret, numStrings - 1, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
                 gc.strokeLine(topX, padding, bottomX, padding + fretboardHeight);
             } else {
                 double x = padding + nutWidth + (fret * fretWidth);
@@ -280,14 +339,20 @@ public class FretboardDisplayModule implements TrainingModule {
             double stringThickness = Math.max(1.0, stringWidth + (string * stringWidthIncrement));
             
             // Calculate string start and end X positions for fanned frets
-            double startX = padding;
-            double endX = padding + nutWidth + fretboardWidth;
+            double startX;
+            double endX;
             
             if (isFannedFret) {
-                // Strings on fanned fret guitars have different effective lengths
-                // The bass strings (higher index) extend further due to the fan angle
-                double fanOffset = fanOffsetPerString * string;
-                endX = padding + nutWidth + fretboardWidth + fanOffset;
+                // For fanned frets, strings start at the nut position for this string
+                // and end at the bridge position for this string
+                double nutOffset = calculateFanOffset(0, numFrets, fanOffsetPerString, numStrings);
+                double bridgeOffset = calculateFanOffset(numFrets, numFrets, fanOffsetPerString, numStrings);
+                double stringProgress = (double) string / (numStrings - 1);
+                startX = padding + (nutOffset * stringProgress);
+                endX = padding + nutWidth + fretboardWidth + (bridgeOffset * stringProgress);
+            } else {
+                startX = padding;
+                endX = padding + nutWidth + fretboardWidth;
             }
             
             // Draw string shadow for depth
@@ -316,10 +381,9 @@ public class FretboardDisplayModule implements TrainingModule {
             double x;
             if (isFannedFret) {
                 // For fanned frets, position label at the center of the angled fret
-                double fanProgress = (double) fret / numFrets;
-                double topX = padding + nutWidth + ((fret - 0.5) * fretWidth);
-                double bottomOffset = (fanOffsetPerString * (numStrings - 1) * fanProgress);
-                x = topX + (bottomOffset / 2);
+                double topX = calculateFannedFretX(fret - 0.5, 0, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+                double bottomX = calculateFannedFretX(fret - 0.5, numStrings - 1, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+                x = (topX + bottomX) / 2;
             } else {
                 x = padding + nutWidth + ((fret - 0.5) * fretWidth);
             }
@@ -356,7 +420,8 @@ public class FretboardDisplayModule implements TrainingModule {
 
     /**
      * Draws wood grain background for fanned fret fretboards.
-     * The background shape follows the angled fret pattern.
+     * The background shape follows the realistic multi-scale fret pattern with
+     * a perpendicular neutral fret and fanning in both directions.
      */
     private void drawFannedWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, 
             double fretboardHeight, double padding, double nutWidth, double scale, int numFrets, 
@@ -364,11 +429,18 @@ public class FretboardDisplayModule implements TrainingModule {
         Color primaryColor = woodGrain.getPrimaryColor();
         Color secondaryColor = woodGrain.getSecondaryColor();
         
-        // Calculate the trapezoid shape for fanned fret fretboard
-        double topLeft = padding;
-        double topRight = padding + nutWidth + fretboardWidth;
-        double bottomLeft = padding + (fanOffsetPerString * (numStrings - 1) * 0.3); // Slight offset at nut
-        double bottomRight = topRight + (fanOffsetPerString * (numStrings - 1));
+        // Calculate the polygon shape for fanned fret fretboard
+        // The shape is determined by the nut and bridge positions for each string
+        double nutFanOffset = calculateFanOffset(0, numFrets, fanOffsetPerString, numStrings);
+        double bridgeFanOffset = calculateFanOffset(numFrets, numFrets, fanOffsetPerString, numStrings);
+        
+        // Top edge (treble side, string index 0)
+        double topLeft = padding + (nutFanOffset * 0); // Nut position for top string
+        double topRight = padding + nutWidth + fretboardWidth + (bridgeFanOffset * 0); // Bridge position for top string
+        
+        // Bottom edge (bass side, string index numStrings-1)
+        double bottomLeft = padding + nutFanOffset; // Nut position for bottom string
+        double bottomRight = padding + nutWidth + fretboardWidth + bridgeFanOffset; // Bridge position for bottom string
         
         // Draw base wood color as a polygon
         gc.setFill(primaryColor);
@@ -405,18 +477,20 @@ public class FretboardDisplayModule implements TrainingModule {
 
     /**
      * Draws a single fret marker for fanned fret fretboards.
-     * The marker is positioned along the angled fret line.
+     * The marker is positioned along the angled fret line at the center of the fretboard.
      */
     private void drawFannedSingleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
             double padding, double nutWidth, double fretWidth, double fretMarkerRadius,
             int numFrets, int numStrings, double fanOffsetPerString) {
-        // Calculate position at the middle of the fretboard
-        double fanProgress = ((double) fret - 0.5) / numFrets;
-        double topX = padding + nutWidth + ((fret - 0.5) * fretWidth);
-        double bottomOffset = fanOffsetPerString * (numStrings - 1) * fanProgress;
+        // Calculate position at the middle of the fretboard (middle string position)
+        int middleStringIndex = (numStrings - 1) / 2;
+        double fretPosition = fret - 0.5; // Center of the fret space
         
-        // Position at the center of the angled fret
-        double x = topX + (bottomOffset / 2);
+        // Calculate X at the middle string position
+        double topX = calculateFannedFretX(fretPosition, 0, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+        double bottomX = calculateFannedFretX(fretPosition, numStrings - 1, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+        double x = (topX + bottomX) / 2; // Center of the fret line
+        
         double y = padding + (fretboardHeight / 2);
         double radius = Math.max(2.0, fretMarkerRadius);
         gc.fillOval(x - radius, y - radius, radius * 2, radius * 2);
@@ -439,17 +513,22 @@ public class FretboardDisplayModule implements TrainingModule {
     private void drawFannedDoubleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
             double padding, double nutWidth, double fretWidth, double fretMarkerRadius,
             int numFrets, int numStrings, double stringSpacing, double fanOffsetPerString) {
-        double fanProgress = ((double) fret - 0.5) / numFrets;
-        double topX = padding + nutWidth + ((fret - 0.5) * fretWidth);
-        double totalFanOffset = fanOffsetPerString * (numStrings - 1) * fanProgress;
+        double fretPosition = fret - 0.5; // Center of the fret space
         
         // Calculate Y positions (1/3 and 2/3 of fretboard height)
         double y1 = padding + (fretboardHeight / 3);
         double y2 = padding + (fretboardHeight * 2 / 3);
         
         // Calculate X positions along the angled fret line
-        double x1 = topX + (totalFanOffset / 3);
-        double x2 = topX + (totalFanOffset * 2 / 3);
+        // The string positions at 1/3 and 2/3 of the fretboard height
+        double stringProgress1 = 1.0 / 3.0;
+        double stringProgress2 = 2.0 / 3.0;
+        
+        double topX = calculateFannedFretX(fretPosition, 0, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+        double bottomX = calculateFannedFretX(fretPosition, numStrings - 1, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+        
+        double x1 = topX + (bottomX - topX) * stringProgress1;
+        double x2 = topX + (bottomX - topX) * stringProgress2;
         
         double radius = Math.max(2.0, fretMarkerRadius);
         gc.fillOval(x1 - radius, y1 - radius, radius * 2, radius * 2);
