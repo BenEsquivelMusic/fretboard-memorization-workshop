@@ -1,10 +1,11 @@
 package com.fretboard.model.string;
 
+import com.fretboard.model.FrequencyRange;
+import com.fretboard.model.Note;
 import com.fretboard.model.UserSettings;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GuitarStringsTest {
 
@@ -49,7 +50,7 @@ public class GuitarStringsTest {
     public void check8StringGuitar() {
         UserSettings userSettings = new UserSettings();
         userSettings.setNumberOfStrings(8);
-        userSettings.setNumberOfFrets(28);
+        userSettings.setNumberOfFrets(36);
         GuitarStrings guitarStrings = new GuitarStrings(userSettings);
         GuitarString[] stringArray = guitarStrings.getAll();
         assertEquals(8, stringArray.length);
@@ -63,7 +64,21 @@ public class GuitarStringsTest {
         assertInstanceOf(LowGString.class, stringArray[7]);
 
         for (GuitarString guitarString : stringArray) {
-            assertEquals(28, guitarString.getFretBoardFrequencies().size());
+            assertEquals(36, guitarString.getFretBoardFrequencies().size());
         }
+
+        GuitarString highEString = stringArray[0];
+        FrequencyRange frequencyRange = highEString.getFrequencyRange();
+        assertEquals(Note.E, frequencyRange.lowFrequency().note());
+        assertEquals(Note.E, frequencyRange.highFrequency().note());
+        assertEquals((byte) 4, frequencyRange.lowFrequency().octaveNumber());
+        assertEquals((byte) 7, frequencyRange.highFrequency().octaveNumber());
+        assertEquals(highEString.getOpenString(), frequencyRange.lowFrequency());
     }
+
+    @Test
+    public void checkInvalidFretCountInstantiation() {
+        assertThrows(IllegalArgumentException.class, () -> new DString((byte) 39));
+    }
+
 }

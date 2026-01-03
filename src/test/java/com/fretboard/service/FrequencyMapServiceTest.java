@@ -5,6 +5,7 @@ import com.fretboard.model.Note;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FrequencyMapServiceTest {
 
@@ -30,6 +31,18 @@ public class FrequencyMapServiceTest {
         assertEquals(octave, frequency.octaveNumber());
         FrequencyMapService service = FrequencyMapService.getService();
         assertEquals(24.499, service.getMappedFrequencyNumericValue(frequency));
+    }
+
+    @Test
+    public void checkInvalidFrequencyWithTooLowOctave() {
+        Frequency invalid = new Frequency((byte) -1, Note.E);
+        assertThrows(IllegalArgumentException.class, () -> FrequencyMapService.getService().getMappedFrequencyNumericValue(invalid));
+    }
+
+    @Test
+    public void checkInvalidFrequencyWithTooHighOctave() {
+        Frequency invalid = new Frequency((byte) 25, Note.A_);
+        assertThrows(IllegalArgumentException.class, () -> FrequencyMapService.getService().getMappedFrequencyNumericValue(invalid));
     }
 
 }

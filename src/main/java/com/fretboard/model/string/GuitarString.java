@@ -9,6 +9,7 @@ import com.fretboard.model.UserSettings;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public sealed abstract class GuitarString permits
         AString,
@@ -52,13 +53,14 @@ public sealed abstract class GuitarString permits
         return openString;
     }
 
+    /* This excludes the open string */
     public List<Frequency> getFretBoardFrequencies() {
         return List.of(frets);
     }
 
     public FrequencyRange getFrequencyRange() {
         int numFrets = frets.length;
-        return new FrequencyRange(frets[0], frets[numFrets - 1]);
+        return new FrequencyRange(openString, frets[numFrets - 1]);
     }
 
     public byte getStringNumber() {
@@ -69,9 +71,12 @@ public sealed abstract class GuitarString permits
         int noteOrdinal = openString.note().ordinal();
         byte octaveNumber = openString.octaveNumber();
         int fretCounter = 0;
-        while (fretCounter < frets.length) {
-            Note note = orderedNotes[getNoteIndex(fretCounter)];
-            frets[fretCounter] = new Frequency(octaveNumber, note);
+        int numFrets = frets.length;
+        Frequency[] tempFrets = new Frequency[numFrets + 1];
+        while (fretCounter < numFrets) {
+            int index = fretCounter + 1;
+            Note note = orderedNotes[getNoteIndex(index)];
+            tempFrets[index] = new Frequency(octaveNumber, note);
             ++noteOrdinal;
             if (noteOrdinal >= FretBoardConstants.MAX_NOTES_IN_OCTAVE) {
                 noteOrdinal = 0;
@@ -79,6 +84,8 @@ public sealed abstract class GuitarString permits
             }
             ++fretCounter;
         }
+        /* Kick out the very first note in tempFrets because that's the open string */
+        IntStream.range(1, tempFrets.length).forEach(fretIndex -> frets[fretIndex - 1] = tempFrets[fretIndex]);
     }
 
     private int getNoteIndex(int fretCounter) {
