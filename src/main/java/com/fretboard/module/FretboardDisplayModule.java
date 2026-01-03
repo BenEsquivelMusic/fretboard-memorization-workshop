@@ -18,8 +18,8 @@ import javafx.scene.layout.VBox;
 /**
  * Training module that displays a simple guitar fretboard visualization.
  * The fretboard is rendered based on the user's configured number of strings, frets, and wood grain.
- * The rendering dynamically scales to fit the available canvas window size while ensuring
- * the full guitar is visible when the window is reasonably sized.
+ * The rendering starts at a small default size suitable for small screens and dynamically
+ * scales up to fit the available canvas window size.
  */
 public class FretboardDisplayModule implements TrainingModule {
 
@@ -27,27 +27,25 @@ public class FretboardDisplayModule implements TrainingModule {
     private static final String MODULE_NAME = "Fretboard Display";
     private static final String MODULE_DESCRIPTION = "Displays a visual representation of the guitar fretboard based on your settings.";
 
-    // Base dimensions used for scaling calculations
-    private static final double BASE_FRET_WIDTH = 60.0;
-    private static final double BASE_STRING_SPACING = 30.0;
-    private static final double BASE_NUT_WIDTH = 8.0;
-    private static final double BASE_FRET_LINE_WIDTH = 2.0;
-    private static final double BASE_STRING_WIDTH = 2.5;
-    private static final double BASE_STRING_WIDTH_INCREMENT = 0.6;
-    private static final double BASE_PADDING = 40.0;
-    private static final double BASE_FRET_MARKER_RADIUS = 6.0;
-    private static final double BASE_FONT_SIZE = 10.0;
+    // Base dimensions used for scaling calculations - these are intentionally small
+    // to ensure the guitar is fully visible on small screens by default
+    private static final double BASE_FRET_WIDTH = 30.0;
+    private static final double BASE_STRING_SPACING = 15.0;
+    private static final double BASE_NUT_WIDTH = 4.0;
+    private static final double BASE_FRET_LINE_WIDTH = 1.0;
+    private static final double BASE_STRING_WIDTH = 1.25;
+    private static final double BASE_STRING_WIDTH_INCREMENT = 0.3;
+    private static final double BASE_PADDING = 20.0;
+    private static final double BASE_FRET_MARKER_RADIUS = 3.0;
+    private static final double BASE_FONT_SIZE = 8.0;
     // Extra space below fretboard for fret number labels
-    private static final double BASE_LABEL_AREA_HEIGHT = 20.0;
+    private static final double BASE_LABEL_AREA_HEIGHT = 12.0;
 
     // Slightly lighter canvas background to blend better with the guitar
     private static final Color CANVAS_BACKGROUND_COLOR = Color.rgb(42, 42, 50);
 
     private static final int[] SINGLE_FRET_MARKERS = {3, 5, 7, 9, 15, 17, 19, 21};
     private static final int[] DOUBLE_FRET_MARKERS = {12, 24};
-
-    // Maximum scale factor to prevent the guitar from becoming too large
-    private static final double MAX_SCALE = 2.0;
 
     private final UserSettings userSettings;
     private BorderPane rootPane;
@@ -96,7 +94,7 @@ public class FretboardDisplayModule implements TrainingModule {
         rootPane.setTop(headerBox);
         BorderPane.setMargin(headerBox, new Insets(0, 0, 20, 0));
 
-        // Create canvas for fretboard with initial base dimensions
+        // Create canvas for fretboard with initial small base dimensions
         double canvasWidth = calculateBaseCanvasWidth();
         double canvasHeight = calculateBaseCanvasHeight();
         fretboardCanvas = new Canvas(canvasWidth, canvasHeight);
@@ -107,7 +105,7 @@ public class FretboardDisplayModule implements TrainingModule {
         canvasContainer.setStyle("-fx-background-color: #2a2a32;");
         rootPane.setCenter(canvasContainer);
 
-        // Add listeners for dynamic resizing
+        // Add listeners for dynamic resizing - scales up to fill available space
         canvasContainer.widthProperty().addListener((obs, oldVal, newVal) -> resizeAndRender());
         canvasContainer.heightProperty().addListener((obs, oldVal, newVal) -> resizeAndRender());
 
@@ -116,6 +114,7 @@ public class FretboardDisplayModule implements TrainingModule {
 
     /**
      * Calculates the base canvas width without any scaling applied.
+     * Uses small default dimensions suitable for small screens.
      */
     private double calculateBaseCanvasWidth() {
         return (userSettings.getNumberOfFrets() * BASE_FRET_WIDTH) + BASE_NUT_WIDTH + (BASE_PADDING * 2);
@@ -123,6 +122,7 @@ public class FretboardDisplayModule implements TrainingModule {
 
     /**
      * Calculates the base canvas height without any scaling applied.
+     * Uses small default dimensions suitable for small screens.
      * Includes space for the fret number labels below the fretboard.
      */
     private double calculateBaseCanvasHeight() {
@@ -131,8 +131,9 @@ public class FretboardDisplayModule implements TrainingModule {
 
     /**
      * Resizes the canvas to fit the available container space and re-renders the fretboard.
-     * Ensures the full guitar is visible when the window is reasonably sized by scaling
-     * down only as much as necessary to fit the available space.
+     * Scales up from the small default size to fill the available space while maintaining
+     * aspect ratio. This ensures the full guitar is always visible, starting small for
+     * small screens and growing to fill larger windows.
      */
     private void resizeAndRender() {
         double containerWidth = canvasContainer.getWidth();
@@ -150,11 +151,8 @@ public class FretboardDisplayModule implements TrainingModule {
         double scaleY = containerHeight / baseHeight;
 
         // Use the smaller scale to maintain aspect ratio and ensure full visibility
+        // This allows the guitar to scale up to fill the available space
         double scale = Math.min(scaleX, scaleY);
-
-        // Cap at max scale to prevent overly large rendering, but allow scaling down
-        // as needed to ensure the full guitar fits in the available space
-        scale = Math.min(MAX_SCALE, scale);
 
         // Apply scaling to canvas dimensions
         double newWidth = baseWidth * scale;
@@ -189,11 +187,11 @@ public class FretboardDisplayModule implements TrainingModule {
         double fretWidth = BASE_FRET_WIDTH * scale;
         double stringSpacing = BASE_STRING_SPACING * scale;
         double nutWidth = BASE_NUT_WIDTH * scale;
-        double fretLineWidth = BASE_FRET_LINE_WIDTH * scale;
+        double fretLineWidth = Math.max(1.0, BASE_FRET_LINE_WIDTH * scale);
         double stringWidth = BASE_STRING_WIDTH * scale;
         double stringWidthIncrement = BASE_STRING_WIDTH_INCREMENT * scale;
         double fretMarkerRadius = BASE_FRET_MARKER_RADIUS * scale;
-        double fontSize = BASE_FONT_SIZE * scale;
+        double fontSize = Math.max(6.0, BASE_FONT_SIZE * scale);
         double labelAreaHeight = BASE_LABEL_AREA_HEIGHT * scale;
         
         double fretboardWidth = numFrets * fretWidth;
@@ -237,12 +235,12 @@ public class FretboardDisplayModule implements TrainingModule {
         // Draw strings - more pronounced with metallic colors
         for (int string = 0; string < numStrings; string++) {
             double y = padding + (string * stringSpacing);
-            double stringThickness = stringWidth + (string * stringWidthIncrement);
+            double stringThickness = Math.max(1.0, stringWidth + (string * stringWidthIncrement));
             
             // Draw string shadow for depth
             gc.setStroke(Color.rgb(40, 40, 40, 0.5));
-            gc.setLineWidth(stringThickness + scale);
-            gc.strokeLine(padding, y + scale, padding + nutWidth + fretboardWidth, y + scale);
+            gc.setLineWidth(stringThickness + Math.max(0.5, scale * 0.5));
+            gc.strokeLine(padding, y + Math.max(0.5, scale * 0.5), padding + nutWidth + fretboardWidth, y + Math.max(0.5, scale * 0.5));
             
             // Draw main string with metallic silver color
             gc.setStroke(Color.rgb(200, 200, 210)); // Bright metallic silver
@@ -251,7 +249,7 @@ public class FretboardDisplayModule implements TrainingModule {
             
             // Draw string highlight for 3D effect
             gc.setStroke(Color.rgb(255, 255, 255, 0.6));
-            gc.setLineWidth(Math.max(scale, stringThickness * 0.3));
+            gc.setLineWidth(Math.max(0.5, stringThickness * 0.3));
             gc.strokeLine(padding, y - (stringThickness * 0.2), padding + nutWidth + fretboardWidth, y - (stringThickness * 0.2));
         }
         
@@ -264,11 +262,11 @@ public class FretboardDisplayModule implements TrainingModule {
         for (int fret = 1; fret <= numFrets; fret++) {
             double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
             String fretNumber = String.valueOf(fret);
-            gc.fillText(fretNumber, x - (fretNumber.length() * 3 * scale), labelY);
+            gc.fillText(fretNumber, x - (fretNumber.length() * 2.5 * scale), labelY);
         }
         
         // Draw "Open" label (fret 0)
-        gc.fillText("0", padding + (nutWidth / 2) - (3 * scale), labelY);
+        gc.fillText("0", padding + (nutWidth / 2) - (2.5 * scale), labelY);
     }
 
     private void drawWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, 
@@ -282,12 +280,12 @@ public class FretboardDisplayModule implements TrainingModule {
         
         // Draw subtle wood grain lines for texture
         gc.setStroke(secondaryColor);
-        gc.setLineWidth(scale);
+        gc.setLineWidth(Math.max(0.5, scale * 0.5));
         
-        double grainSpacing = 8.0 * scale;
+        double grainSpacing = Math.max(4.0, 8.0 * scale);
         for (double y = padding; y < padding + fretboardHeight; y += grainSpacing) {
             // Add slight variation to make it look more natural
-            double offset = Math.sin(y * 0.1 / scale) * 2 * scale;
+            double offset = Math.sin(y * 0.1 / Math.max(0.1, scale)) * 2 * scale;
             gc.setGlobalAlpha(0.3);
             gc.strokeLine(padding + offset, y, padding + nutWidth + fretboardWidth + offset, y);
         }
@@ -298,8 +296,8 @@ public class FretboardDisplayModule implements TrainingModule {
             double padding, double nutWidth, double fretWidth, double fretMarkerRadius) {
         double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
         double y = padding + (fretboardHeight / 2);
-        gc.fillOval(x - fretMarkerRadius, y - fretMarkerRadius, 
-                fretMarkerRadius * 2, fretMarkerRadius * 2);
+        double radius = Math.max(2.0, fretMarkerRadius);
+        gc.fillOval(x - radius, y - radius, radius * 2, radius * 2);
     }
 
     private void drawDoubleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
@@ -307,10 +305,9 @@ public class FretboardDisplayModule implements TrainingModule {
         double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
         double y1 = padding + (fretboardHeight / 3);
         double y2 = padding + (fretboardHeight * 2 / 3);
-        gc.fillOval(x - fretMarkerRadius, y1 - fretMarkerRadius, 
-                fretMarkerRadius * 2, fretMarkerRadius * 2);
-        gc.fillOval(x - fretMarkerRadius, y2 - fretMarkerRadius, 
-                fretMarkerRadius * 2, fretMarkerRadius * 2);
+        double radius = Math.max(2.0, fretMarkerRadius);
+        gc.fillOval(x - radius, y1 - radius, radius * 2, radius * 2);
+        gc.fillOval(x - radius, y2 - radius, radius * 2, radius * 2);
     }
 
     @Override
