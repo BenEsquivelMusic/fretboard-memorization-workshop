@@ -26,6 +26,8 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,6 +42,7 @@ public final class MainController {
     private final UserDataService userDataService;
     private final AudioInputService audioInputService;
     private final TrainingModuleRegistry moduleRegistry;
+    
     @FXML
     private BorderPane rootPane;
     @FXML
@@ -50,8 +53,14 @@ public final class MainController {
     private Label statusLabel;
     @FXML
     private MenuBar menuBar;
+    @FXML
+    private MenuItem saveMenuItem;
+    @FXML
+    private MenuItem saveAsMenuItem;
+    
     private Stage primaryStage;
     private TrainingModule activeModule;
+    private boolean profileActive = false;
 
     public MainController() {
         this.userDataService = UserDataService.getInstance();
@@ -64,6 +73,7 @@ public final class MainController {
         registerTrainingModules();
         updateModuleList();
         updateStatus("Ready");
+        updateSaveMenuItemsState();
     }
 
     /**
@@ -84,6 +94,19 @@ public final class MainController {
         this.primaryStage = primaryStage;
     }
 
+    /**
+     * Updates the enabled/disabled state of Save and Save As menu items.
+     * These items are disabled until a profile has been created or opened.
+     */
+    private void updateSaveMenuItemsState() {
+        if (saveMenuItem != null) {
+            saveMenuItem.setDisable(!profileActive);
+        }
+        if (saveAsMenuItem != null) {
+            saveAsMenuItem.setDisable(!profileActive);
+        }
+    }
+
     @FXML
     public void handleNewFile() {
         if (confirmUnsavedChanges()) {
@@ -99,8 +122,42 @@ public final class MainController {
                 settings.setUserName(dialogResult.userName());
                 settings.setDataSaveLocation(dialogResult.saveLocation());
                 
-                updateStatus("New file created for " + dialogResult.userName());
+                // Mark profile as active and enable save menu items
+                profileActive = true;
+                updateSaveMenuItemsState();
+                
+                // Auto-save the new profile
+                autoSaveNewProfile(dialogResult.userName(), dialogResult.saveLocation());
+                
+                updateStatus("New profile created for " + dialogResult.userName());
             }
+        }
+    }
+
+    /**
+     * Automatically saves a new profile to the selected save location using the user's name as the filename.
+     *
+     * @param userName the user's name to use as the base filename
+     * @param saveLocation the directory path where the file should be saved
+     */
+    private void autoSaveNewProfile(String userName, String saveLocation) {
+        // Create a safe filename from the user's name
+        String safeFileName = userName.replaceAll("[^a-zA-Z0-9\\-_]", "_");
+        String fileName = safeFileName + userDataService.getFileExtension();
+        Path filePath = Paths.get(saveLocation, fileName);
+        
+        // Check if file already exists and create a unique name if needed
+        int counter = 1;
+        while (filePath.toFile().exists()) {
+            fileName = safeFileName + "_" + counter + userDataService.getFileExtension();
+            filePath = Paths.get(saveLocation, fileName);
+            counter++;
+        }
+        
+        if (userDataService.saveToFile(filePath)) {
+            updateStatus("Profile saved: " + fileName);
+        } else {
+            showError("Save Failed", "Could not automatically save the profile. Please use Save As to save manually.");
         }
     }
 
@@ -198,6 +255,10 @@ public final class MainController {
         if (file != null) {
             Optional<UserData> loaded = userDataService.loadFromFile(file.toPath());
             if (loaded.isPresent()) {
+                // Mark profile as active and enable save menu items
+                profileActive = true;
+                updateSaveMenuItemsState();
+                
                 updateStatus("Loaded: " + file.getName());
                 initializeAudioIfConfigured();
             } else {
@@ -208,6 +269,10 @@ public final class MainController {
 
     @FXML
     public void handleSaveFile() {
+        if (!profileActive) {
+            return;
+        }
+        
         if (userDataService.getCurrentFilePath().isPresent()) {
             if (userDataService.save()) {
                 updateStatus("Saved");
@@ -215,17 +280,44 @@ public final class MainController {
                 showError("Save Failed", "Could not save the file.");
             }
         } else {
-            handleSaveFileAs();
+            // If no file path exists but we have settings, auto-save using user name
+            UserData userData = userDataService.getCurrentUserData();
+            UserSettings settings = userData.getSettings();
+            if (settings.isUserNameConfigured() && settings.isSaveLocationConfigured()) {
+                autoSaveNewProfile(settings.getUserName(), settings.getDataSaveLocation());
+            } else {
+                handleSaveFileAs();
+            }
         }
     }
 
     @FXML
     public void handleSaveFileAs() {
+        if (!profileActive) {
+            return;
+        }
+        
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save User Data");
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Fretboard Data", "*" + userDataService.getFileExtension())
         );
+        
+        // Pre-fill filename with user's name if available
+        UserData userData = userDataService.getCurrentUserData();
+        UserSettings settings = userData.getSettings();
+        if (settings.isUserNameConfigured()) {
+            String safeFileName = settings.getUserName().replaceAll("[^a-zA-Z0-9\\-_]", "_");
+            fileChooser.setInitialFileName(safeFileName + userDataService.getFileExtension());
+        }
+        
+        // Set initial directory to saved location if available
+        if (settings.isSaveLocationConfigured()) {
+            File saveDir = new File(settings.getDataSaveLocation());
+            if (saveDir.exists() && saveDir.isDirectory()) {
+                fileChooser.setInitialDirectory(saveDir);
+            }
+        }
 
         File file = fileChooser.showSaveDialog(primaryStage);
         if (file != null) {
