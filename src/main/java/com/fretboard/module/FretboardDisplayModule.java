@@ -1,19 +1,29 @@
 package com.fretboard.module;
 
+import com.fretboard.model.Frequency;
+import com.fretboard.model.Note;
 import com.fretboard.model.TrainingModuleProgress;
 import com.fretboard.model.UserSettings;
 import com.fretboard.model.WoodGrain;
+import com.fretboard.model.string.GuitarString;
+import com.fretboard.model.string.GuitarStrings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.CheckBox;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.layout.VBox;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Training module that displays a simple guitar fretboard visualization.
@@ -21,6 +31,11 @@ import javafx.scene.layout.VBox;
  * The rendering starts at a small default size suitable for small screens and dynamically
  * scales up to fit the available canvas window size.
  * Supports both standard and fanned-fret (multi-scale) fretboard styles.
+ * 
+ * Features frequency display overlay with interactive note highlighting:
+ * - Toggle to show/hide all frequencies (note name + octave) on each fret
+ * - Click on a frequency to highlight it in green
+ * - All other frequencies with the same note are highlighted in blue
  * 
  * For fanned frets, the rendering mimics real multi-scale guitars where:
  * - A "neutral fret" (typically around fret 7-9) is perpendicular to the strings
@@ -60,6 +75,10 @@ public class FretboardDisplayModule implements TrainingModule {
 
     // Slightly lighter canvas background to blend better with the guitar
     private static final Color CANVAS_BACKGROUND_COLOR = Color.rgb(42, 42, 50);
+    
+    // Colors for frequency highlighting
+    private static final Color SELECTED_FREQUENCY_COLOR = Color.rgb(34, 197, 94); // Green for selected
+    private static final Color MATCHING_NOTE_COLOR = Color.rgb(59, 130, 246); // Blue for matching notes
 
     private static final int[] SINGLE_FRET_MARKERS = {3, 5, 7, 9, 15, 17, 19, 21};
     private static final int[] DOUBLE_FRET_MARKERS = {12, 24};
@@ -70,6 +89,14 @@ public class FretboardDisplayModule implements TrainingModule {
     private StackPane canvasContainer;
     private TrainingModuleProgress progress;
     private boolean running;
+    
+    // Frequency display state
+    private boolean showFrequencies = false;
+    private Frequency selectedFrequency = null;
+    private int selectedStringIndex = -1;
+    private int selectedFretIndex = -1;
+    private List<FrequencyClickRegion> frequencyClickRegions = new ArrayList<>();
+    private GuitarStrings guitarStrings;
 
     /**
      * Creates a new FretboardDisplayModule with the given user settings.
@@ -79,6 +106,7 @@ public class FretboardDisplayModule implements TrainingModule {
     public FretboardDisplayModule(UserSettings userSettings) {
         this.userSettings = userSettings;
         this.running = false;
+        this.guitarStrings = new GuitarStrings(userSettings);
         initializeUI();
     }
 
@@ -109,7 +137,25 @@ public class FretboardDisplayModule implements TrainingModule {
         settingsInfo.setFont(Font.font("System", 12));
         settingsInfo.setFill(Color.GRAY);
         
-        headerBox.getChildren().addAll(titleText, descriptionText, settingsInfo);
+        // Controls section
+        HBox controlsBox = new HBox(20);
+        controlsBox.setAlignment(Pos.CENTER);
+        controlsBox.setPadding(new Insets(10, 0, 0, 0));
+        
+        CheckBox showFrequenciesCheckBox = new CheckBox("Show Frequencies");
+        showFrequenciesCheckBox.setStyle("-fx-text-fill: white;");
+        showFrequenciesCheckBox.setSelected(showFrequencies);
+        showFrequenciesCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            showFrequencies = newVal;
+            if (!showFrequencies) {
+                clearFrequencySelection();
+            }
+            renderFretboard();
+        });
+        
+        controlsBox.getChildren().add(showFrequenciesCheckBox);
+        
+        headerBox.getChildren().addAll(titleText, descriptionText, settingsInfo, controlsBox);
         rootPane.setTop(headerBox);
         BorderPane.setMargin(headerBox, new Insets(0, 0, 20, 0));
 
@@ -117,6 +163,9 @@ public class FretboardDisplayModule implements TrainingModule {
         double canvasWidth = calculateBaseCanvasWidth();
         double canvasHeight = calculateBaseCanvasHeight();
         fretboardCanvas = new Canvas(canvasWidth, canvasHeight);
+        
+        // Add mouse click handler for frequency selection
+        fretboardCanvas.setOnMouseClicked(this::handleCanvasClick);
         
         // Use StackPane for better centering during resize
         canvasContainer = new StackPane(fretboardCanvas);
@@ -129,6 +178,47 @@ public class FretboardDisplayModule implements TrainingModule {
         canvasContainer.heightProperty().addListener((obs, oldVal, newVal) -> resizeAndRender());
 
         renderFretboard();
+    }
+    
+    /**
+     * Handles mouse clicks on the canvas for frequency selection.
+     */
+    private void handleCanvasClick(MouseEvent event) {
+        if (!showFrequencies) {
+            return;
+        }
+        
+        double clickX = event.getX();
+        double clickY = event.getY();
+        
+        // Check if click is within any frequency label region
+        for (FrequencyClickRegion region : frequencyClickRegions) {
+            if (region.contains(clickX, clickY)) {
+                // If clicking on the same frequency, deselect it
+                if (selectedStringIndex == region.stringIndex && selectedFretIndex == region.fretIndex) {
+                    clearFrequencySelection();
+                } else {
+                    selectedFrequency = region.frequency;
+                    selectedStringIndex = region.stringIndex;
+                    selectedFretIndex = region.fretIndex;
+                }
+                renderFretboard();
+                return;
+            }
+        }
+        
+        // Clicked outside any frequency - clear selection
+        clearFrequencySelection();
+        renderFretboard();
+    }
+    
+    /**
+     * Clears the current frequency selection.
+     */
+    private void clearFrequencySelection() {
+        selectedFrequency = null;
+        selectedStringIndex = -1;
+        selectedFretIndex = -1;
     }
 
     /**
@@ -245,6 +335,9 @@ public class FretboardDisplayModule implements TrainingModule {
         int numStrings = userSettings.getNumberOfStrings();
         WoodGrain woodGrain = userSettings.getFretboardWoodGrain();
         boolean isFannedFret = userSettings.isFannedFret();
+
+        // Clear click regions for fresh render
+        frequencyClickRegions.clear();
 
         // Calculate scale factor for dynamic rendering
         double scale = calculateScaleFactor();
@@ -371,6 +464,12 @@ public class FretboardDisplayModule implements TrainingModule {
             gc.strokeLine(startX, y - (stringThickness * 0.2), endX, y - (stringThickness * 0.2));
         }
         
+        // Draw frequency labels if enabled
+        if (showFrequencies) {
+            drawFrequencyLabels(gc, numFrets, numStrings, padding, nutWidth, fretWidth, 
+                    stringSpacing, fontSize, scale, isFannedFret, fanOffsetPerString);
+        }
+        
         // Draw fret numbers below the fretboard
         gc.setFill(Color.LIGHTGRAY);
         gc.setFont(Font.font("System", fontSize));
@@ -393,6 +492,101 @@ public class FretboardDisplayModule implements TrainingModule {
         
         // Draw "Open" label (fret 0)
         gc.fillText("0", padding + (nutWidth / 2) - (2.5 * scale), labelY);
+    }
+    
+    /**
+     * Draws frequency labels on each fret position for all strings.
+     */
+    private void drawFrequencyLabels(GraphicsContext gc, int numFrets, int numStrings,
+            double padding, double nutWidth, double fretWidth, double stringSpacing,
+            double fontSize, double scale, boolean isFannedFret, double fanOffsetPerString) {
+        
+        double frequencyFontSize = Math.max(5.0, fontSize * 0.75);
+        gc.setFont(Font.font("System", frequencyFontSize));
+        
+        GuitarString[] strings = guitarStrings.getAll();
+        
+        for (int stringIndex = 0; stringIndex < numStrings && stringIndex < strings.length; stringIndex++) {
+            GuitarString guitarString = strings[stringIndex];
+            double y = padding + (stringIndex * stringSpacing);
+            
+            // Draw open string frequency (fret 0)
+            Frequency openFrequency = guitarString.getOpenString();
+            double openX;
+            if (isFannedFret) {
+                double nutOffset = calculateFanOffset(0, numFrets, fanOffsetPerString, numStrings);
+                double stringProgress = (double) stringIndex / (numStrings - 1);
+                openX = padding + (nutOffset * stringProgress) + (nutWidth / 2);
+            } else {
+                openX = padding + (nutWidth / 2);
+            }
+            drawFrequencyLabel(gc, openFrequency, openX, y, frequencyFontSize, scale, stringIndex, 0);
+            
+            // Draw fretted frequencies
+            List<Frequency> fretFrequencies = guitarString.getFretBoardFrequencies();
+            for (int fretIndex = 0; fretIndex < fretFrequencies.size() && fretIndex < numFrets; fretIndex++) {
+                Frequency frequency = fretFrequencies.get(fretIndex);
+                int fret = fretIndex + 1;
+                
+                double x;
+                if (isFannedFret) {
+                    double topX = calculateFannedFretX(fret - 0.5, 0, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+                    double bottomX = calculateFannedFretX(fret - 0.5, numStrings - 1, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
+                    double stringProgress = (double) stringIndex / (numStrings - 1);
+                    x = topX + (bottomX - topX) * stringProgress;
+                } else {
+                    x = padding + nutWidth + ((fret - 0.5) * fretWidth);
+                }
+                
+                drawFrequencyLabel(gc, frequency, x, y, frequencyFontSize, scale, stringIndex, fret);
+            }
+        }
+    }
+    
+    /**
+     * Draws a single frequency label with appropriate highlighting.
+     */
+    private void drawFrequencyLabel(GraphicsContext gc, Frequency frequency, double x, double y,
+            double fontSize, double scale, int stringIndex, int fretIndex) {
+        
+        String label = frequency.note().getDisplayNote() + frequency.octaveNumber();
+        double labelWidth = label.length() * fontSize * 0.6;
+        double labelHeight = fontSize * 1.2;
+        
+        // Calculate label bounds
+        double labelX = x - (labelWidth / 2);
+        double labelY = y - (labelHeight / 2);
+        
+        // Store click region
+        frequencyClickRegions.add(new FrequencyClickRegion(
+                labelX, labelY, labelWidth, labelHeight, frequency, stringIndex, fretIndex));
+        
+        // Determine background color based on selection
+        Color bgColor;
+        if (selectedFrequency != null) {
+            if (stringIndex == selectedStringIndex && fretIndex == selectedFretIndex) {
+                // This is the selected frequency
+                bgColor = SELECTED_FREQUENCY_COLOR;
+            } else if (frequency.note() == selectedFrequency.note()) {
+                // This frequency has the same note as the selected one
+                bgColor = MATCHING_NOTE_COLOR;
+            } else {
+                // Not selected, not matching
+                bgColor = Color.rgb(60, 60, 70, 0.8);
+            }
+        } else {
+            // No selection - default background
+            bgColor = Color.rgb(60, 60, 70, 0.8);
+        }
+        
+        // Draw background
+        gc.setFill(bgColor);
+        gc.fillRoundRect(labelX, labelY, labelWidth, labelHeight, 4 * scale, 4 * scale);
+        
+        // Draw text
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("System", fontSize));
+        gc.fillText(label, labelX + (2 * scale), y + (fontSize * 0.35));
     }
 
     private void drawWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, 
@@ -598,5 +792,33 @@ public class FretboardDisplayModule implements TrainingModule {
     @Override
     public String getIconPath() {
         return null;
+    }
+    
+    /**
+     * Helper class to track clickable regions for frequency labels.
+     */
+    private static class FrequencyClickRegion {
+        final double x;
+        final double y;
+        final double width;
+        final double height;
+        final Frequency frequency;
+        final int stringIndex;
+        final int fretIndex;
+        
+        FrequencyClickRegion(double x, double y, double width, double height,
+                Frequency frequency, int stringIndex, int fretIndex) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.frequency = frequency;
+            this.stringIndex = stringIndex;
+            this.fretIndex = fretIndex;
+        }
+        
+        boolean contains(double px, double py) {
+            return px >= x && px <= x + width && py >= y && py <= y + height;
+        }
     }
 }
