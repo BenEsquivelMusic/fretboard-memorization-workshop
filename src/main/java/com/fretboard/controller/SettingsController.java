@@ -14,11 +14,30 @@ import java.util.logging.Logger;
 
 /**
  * Controller for the settings window.
- * Manages guitar input port selection, fret count, string count, and wood grain configuration.
+ * Manages guitar input port selection, fret count, string count, wood grain, and fretboard style configuration.
  */
 public final class SettingsController {
 
     private static final Logger LOGGER = Logger.getLogger(SettingsController.class.getName());
+    
+    /**
+     * Enum representing the available fretboard styles.
+     */
+    public enum FretboardStyle {
+        STANDARD("Standard"),
+        FANNED("Fanned");
+
+        private final String displayName;
+
+        FretboardStyle(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
     private final UserDataService userDataService;
     private final AudioInputService audioInputService;
     @FXML
@@ -29,6 +48,8 @@ public final class SettingsController {
     private Spinner<Integer> stringCountSpinner;
     @FXML
     private ComboBox<WoodGrain> woodGrainComboBox;
+    @FXML
+    private ComboBox<FretboardStyle> fretboardStyleComboBox;
     @FXML
     private Button browseButton;
     @FXML
@@ -53,6 +74,7 @@ public final class SettingsController {
         setupFretCountSpinner();
         setupStringCountSpinner();
         setupWoodGrainComboBox();
+        setupFretboardStyleComboBox();
         refreshInputPorts();
         loadCurrentSettings();
     }
@@ -87,6 +109,10 @@ public final class SettingsController {
         settings.setNumberOfFrets(fretCountSpinner.getValue());
         settings.setNumberOfStrings(stringCountSpinner.getValue());
         settings.setFretboardWoodGrain(woodGrainComboBox.getValue());
+        
+        // Save fretboard style setting
+        FretboardStyle selectedStyle = fretboardStyleComboBox.getValue();
+        settings.setFannedFret(selectedStyle == FretboardStyle.FANNED);
 
         userDataService.markAsModified();
         settingsChanged = true;
@@ -177,6 +203,27 @@ public final class SettingsController {
         });
     }
 
+    private void setupFretboardStyleComboBox() {
+        fretboardStyleComboBox.getItems().addAll(FretboardStyle.values());
+        fretboardStyleComboBox.setValue(FretboardStyle.STANDARD); // Default to Standard
+        fretboardStyleComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(FretboardStyle style) {
+                return style != null ? style.getDisplayName() : "";
+            }
+
+            @Override
+            public FretboardStyle fromString(String string) {
+                for (FretboardStyle style : FretboardStyle.values()) {
+                    if (style.getDisplayName().equals(string)) {
+                        return style;
+                    }
+                }
+                return FretboardStyle.STANDARD;
+            }
+        });
+    }
+
     private void refreshInputPorts() {
         List<String> ports = audioInputService.getAvailableInputPorts();
 
@@ -205,6 +252,9 @@ public final class SettingsController {
         fretCountSpinner.getValueFactory().setValue(settings.getNumberOfFrets());
         stringCountSpinner.getValueFactory().setValue(settings.getNumberOfStrings());
         woodGrainComboBox.setValue(settings.getFretboardWoodGrain());
+        
+        // Load fretboard style setting
+        fretboardStyleComboBox.setValue(settings.isFannedFret() ? FretboardStyle.FANNED : FretboardStyle.STANDARD);
     }
 
     private boolean validateSettings() {
