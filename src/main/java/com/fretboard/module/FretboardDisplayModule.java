@@ -20,6 +20,7 @@ import javafx.scene.layout.VBox;
  * The fretboard is rendered based on the user's configured number of strings, frets, and wood grain.
  * The rendering starts at a small default size suitable for small screens and dynamically
  * scales up to fit the available canvas window size.
+ * Supports both standard and fanned-fret (multi-scale) fretboard styles.
  */
 public class FretboardDisplayModule implements TrainingModule {
 
@@ -40,6 +41,10 @@ public class FretboardDisplayModule implements TrainingModule {
     private static final double BASE_FONT_SIZE = 8.0;
     // Extra space below fretboard for fret number labels
     private static final double BASE_LABEL_AREA_HEIGHT = 12.0;
+
+    // Fanned fret configuration - the angle creates a fan effect across the fretboard
+    // This represents how much the fret slants per string (in pixels at base scale)
+    private static final double BASE_FAN_OFFSET_PER_STRING = 3.0;
 
     // Slightly lighter canvas background to blend better with the guitar
     private static final Color CANVAS_BACKGROUND_COLOR = Color.rgb(42, 42, 50);
@@ -83,10 +88,12 @@ public class FretboardDisplayModule implements TrainingModule {
         descriptionText.setFill(Color.LIGHTGRAY);
         
         WoodGrain woodGrain = userSettings.getFretboardWoodGrain();
-        Text settingsInfo = new Text(String.format("Strings: %d | Frets: %d | Wood: %s", 
+        String fretStyle = userSettings.isFannedFret() ? "Fanned" : "Standard";
+        Text settingsInfo = new Text(String.format("Strings: %d | Frets: %d | Wood: %s | Style: %s", 
                 userSettings.getNumberOfStrings(), 
                 userSettings.getNumberOfFrets(),
-                woodGrain.getDisplayName()));
+                woodGrain.getDisplayName(),
+                fretStyle));
         settingsInfo.setFont(Font.font("System", 12));
         settingsInfo.setFill(Color.GRAY);
         
@@ -178,6 +185,7 @@ public class FretboardDisplayModule implements TrainingModule {
         int numFrets = userSettings.getNumberOfFrets();
         int numStrings = userSettings.getNumberOfStrings();
         WoodGrain woodGrain = userSettings.getFretboardWoodGrain();
+        boolean isFannedFret = userSettings.isFannedFret();
 
         // Calculate scale factor for dynamic rendering
         double scale = calculateScaleFactor();
@@ -193,6 +201,7 @@ public class FretboardDisplayModule implements TrainingModule {
         double fretMarkerRadius = BASE_FRET_MARKER_RADIUS * scale;
         double fontSize = Math.max(6.0, BASE_FONT_SIZE * scale);
         double labelAreaHeight = BASE_LABEL_AREA_HEIGHT * scale;
+        double fanOffsetPerString = BASE_FAN_OFFSET_PER_STRING * scale;
         
         double fretboardWidth = numFrets * fretWidth;
         double fretboardHeight = (numStrings - 1) * stringSpacing;
@@ -202,19 +211,42 @@ public class FretboardDisplayModule implements TrainingModule {
         gc.fillRect(0, 0, fretboardCanvas.getWidth(), fretboardCanvas.getHeight());
         
         // Draw fretboard background with wood grain colors
-        drawWoodGrainBackground(gc, woodGrain, fretboardWidth, fretboardHeight, padding, nutWidth, scale);
+        if (isFannedFret) {
+            drawFannedWoodGrainBackground(gc, woodGrain, fretboardWidth, fretboardHeight, 
+                    padding, nutWidth, scale, numFrets, numStrings, fretWidth, stringSpacing, fanOffsetPerString);
+        } else {
+            drawWoodGrainBackground(gc, woodGrain, fretboardWidth, fretboardHeight, padding, nutWidth, scale);
+        }
         
-        // Draw nut (the zero fret)
+        // Draw nut (the zero fret) - for fanned frets, this is also angled
         gc.setFill(Color.rgb(245, 245, 220)); // Bone/ivory color
-        gc.fillRect(padding, padding, nutWidth, fretboardHeight);
+        if (isFannedFret) {
+            // Draw angled nut for fanned frets
+            double nutTopX = padding;
+            double nutBottomX = padding + (fanOffsetPerString * (numStrings - 1) * 0.3); // Slight angle at nut
+            double[] xPoints = {nutTopX, nutTopX + nutWidth, nutBottomX + nutWidth, nutBottomX};
+            double[] yPoints = {padding, padding, padding + fretboardHeight, padding + fretboardHeight};
+            gc.fillPolygon(xPoints, yPoints, 4);
+        } else {
+            gc.fillRect(padding, padding, nutWidth, fretboardHeight);
+        }
         
         // Draw frets
         gc.setStroke(Color.rgb(192, 192, 192)); // Silver color for frets
         gc.setLineWidth(fretLineWidth);
         
         for (int fret = 1; fret <= numFrets; fret++) {
-            double x = padding + nutWidth + (fret * fretWidth);
-            gc.strokeLine(x, padding, x, padding + fretboardHeight);
+            if (isFannedFret) {
+                // Calculate fanned fret positions
+                // The fan angle increases progressively from nut to bridge
+                double fanProgress = (double) fret / numFrets;
+                double topX = padding + nutWidth + (fret * fretWidth);
+                double bottomX = topX + (fanOffsetPerString * (numStrings - 1) * fanProgress);
+                gc.strokeLine(topX, padding, bottomX, padding + fretboardHeight);
+            } else {
+                double x = padding + nutWidth + (fret * fretWidth);
+                gc.strokeLine(x, padding, x, padding + fretboardHeight);
+            }
         }
         
         // Draw fret markers
@@ -222,13 +254,23 @@ public class FretboardDisplayModule implements TrainingModule {
         
         for (int marker : SINGLE_FRET_MARKERS) {
             if (marker <= numFrets) {
-                drawSingleFretMarker(gc, marker, fretboardHeight, padding, nutWidth, fretWidth, fretMarkerRadius);
+                if (isFannedFret) {
+                    drawFannedSingleFretMarker(gc, marker, fretboardHeight, padding, nutWidth, 
+                            fretWidth, fretMarkerRadius, numFrets, numStrings, fanOffsetPerString);
+                } else {
+                    drawSingleFretMarker(gc, marker, fretboardHeight, padding, nutWidth, fretWidth, fretMarkerRadius);
+                }
             }
         }
         
         for (int marker : DOUBLE_FRET_MARKERS) {
             if (marker <= numFrets) {
-                drawDoubleFretMarker(gc, marker, fretboardHeight, padding, nutWidth, fretWidth, fretMarkerRadius);
+                if (isFannedFret) {
+                    drawFannedDoubleFretMarker(gc, marker, fretboardHeight, padding, nutWidth, 
+                            fretWidth, fretMarkerRadius, numFrets, numStrings, stringSpacing, fanOffsetPerString);
+                } else {
+                    drawDoubleFretMarker(gc, marker, fretboardHeight, padding, nutWidth, fretWidth, fretMarkerRadius);
+                }
             }
         }
         
@@ -237,20 +279,31 @@ public class FretboardDisplayModule implements TrainingModule {
             double y = padding + (string * stringSpacing);
             double stringThickness = Math.max(1.0, stringWidth + (string * stringWidthIncrement));
             
+            // Calculate string start and end X positions for fanned frets
+            double startX = padding;
+            double endX = padding + nutWidth + fretboardWidth;
+            
+            if (isFannedFret) {
+                // Strings on fanned fret guitars have different effective lengths
+                // The bass strings (higher index) extend further due to the fan angle
+                double fanOffset = fanOffsetPerString * string;
+                endX = padding + nutWidth + fretboardWidth + fanOffset;
+            }
+            
             // Draw string shadow for depth
             gc.setStroke(Color.rgb(40, 40, 40, 0.5));
             gc.setLineWidth(stringThickness + Math.max(0.5, scale * 0.5));
-            gc.strokeLine(padding, y + Math.max(0.5, scale * 0.5), padding + nutWidth + fretboardWidth, y + Math.max(0.5, scale * 0.5));
+            gc.strokeLine(startX, y + Math.max(0.5, scale * 0.5), endX, y + Math.max(0.5, scale * 0.5));
             
             // Draw main string with metallic silver color
             gc.setStroke(Color.rgb(200, 200, 210)); // Bright metallic silver
             gc.setLineWidth(stringThickness);
-            gc.strokeLine(padding, y, padding + nutWidth + fretboardWidth, y);
+            gc.strokeLine(startX, y, endX, y);
             
             // Draw string highlight for 3D effect
             gc.setStroke(Color.rgb(255, 255, 255, 0.6));
             gc.setLineWidth(Math.max(0.5, stringThickness * 0.3));
-            gc.strokeLine(padding, y - (stringThickness * 0.2), padding + nutWidth + fretboardWidth, y - (stringThickness * 0.2));
+            gc.strokeLine(startX, y - (stringThickness * 0.2), endX, y - (stringThickness * 0.2));
         }
         
         // Draw fret numbers below the fretboard
@@ -260,7 +313,16 @@ public class FretboardDisplayModule implements TrainingModule {
         double labelY = padding + fretboardHeight + (labelAreaHeight * 0.75);
         
         for (int fret = 1; fret <= numFrets; fret++) {
-            double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
+            double x;
+            if (isFannedFret) {
+                // For fanned frets, position label at the center of the angled fret
+                double fanProgress = (double) fret / numFrets;
+                double topX = padding + nutWidth + ((fret - 0.5) * fretWidth);
+                double bottomOffset = (fanOffsetPerString * (numStrings - 1) * fanProgress);
+                x = topX + (bottomOffset / 2);
+            } else {
+                x = padding + nutWidth + ((fret - 0.5) * fretWidth);
+            }
             String fretNumber = String.valueOf(fret);
             gc.fillText(fretNumber, x - (fretNumber.length() * 2.5 * scale), labelY);
         }
@@ -292,9 +354,69 @@ public class FretboardDisplayModule implements TrainingModule {
         gc.setGlobalAlpha(1.0);
     }
 
+    /**
+     * Draws wood grain background for fanned fret fretboards.
+     * The background shape follows the angled fret pattern.
+     */
+    private void drawFannedWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, 
+            double fretboardHeight, double padding, double nutWidth, double scale, int numFrets, 
+            int numStrings, double fretWidth, double stringSpacing, double fanOffsetPerString) {
+        Color primaryColor = woodGrain.getPrimaryColor();
+        Color secondaryColor = woodGrain.getSecondaryColor();
+        
+        // Calculate the trapezoid shape for fanned fret fretboard
+        double topLeft = padding;
+        double topRight = padding + nutWidth + fretboardWidth;
+        double bottomLeft = padding + (fanOffsetPerString * (numStrings - 1) * 0.3); // Slight offset at nut
+        double bottomRight = topRight + (fanOffsetPerString * (numStrings - 1));
+        
+        // Draw base wood color as a polygon
+        gc.setFill(primaryColor);
+        double[] xPoints = {topLeft, topRight, bottomRight, bottomLeft};
+        double[] yPoints = {padding, padding, padding + fretboardHeight, padding + fretboardHeight};
+        gc.fillPolygon(xPoints, yPoints, 4);
+        
+        // Draw subtle wood grain lines for texture
+        gc.setStroke(secondaryColor);
+        gc.setLineWidth(Math.max(0.5, scale * 0.5));
+        
+        double grainSpacing = Math.max(4.0, 8.0 * scale);
+        for (double y = padding; y < padding + fretboardHeight; y += grainSpacing) {
+            // Calculate the X offset based on Y position for fanned effect
+            double yProgress = (y - padding) / fretboardHeight;
+            double leftX = topLeft + (bottomLeft - topLeft) * yProgress;
+            double rightX = topRight + (bottomRight - topRight) * yProgress;
+            
+            // Add slight variation to make it look more natural
+            double offset = Math.sin(y * 0.1 / Math.max(0.1, scale)) * 2 * scale;
+            gc.setGlobalAlpha(0.3);
+            gc.strokeLine(leftX + offset, y, rightX + offset, y);
+        }
+        gc.setGlobalAlpha(1.0);
+    }
+
     private void drawSingleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
             double padding, double nutWidth, double fretWidth, double fretMarkerRadius) {
         double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
+        double y = padding + (fretboardHeight / 2);
+        double radius = Math.max(2.0, fretMarkerRadius);
+        gc.fillOval(x - radius, y - radius, radius * 2, radius * 2);
+    }
+
+    /**
+     * Draws a single fret marker for fanned fret fretboards.
+     * The marker is positioned along the angled fret line.
+     */
+    private void drawFannedSingleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
+            double padding, double nutWidth, double fretWidth, double fretMarkerRadius,
+            int numFrets, int numStrings, double fanOffsetPerString) {
+        // Calculate position at the middle of the fretboard
+        double fanProgress = ((double) fret - 0.5) / numFrets;
+        double topX = padding + nutWidth + ((fret - 0.5) * fretWidth);
+        double bottomOffset = fanOffsetPerString * (numStrings - 1) * fanProgress;
+        
+        // Position at the center of the angled fret
+        double x = topX + (bottomOffset / 2);
         double y = padding + (fretboardHeight / 2);
         double radius = Math.max(2.0, fretMarkerRadius);
         gc.fillOval(x - radius, y - radius, radius * 2, radius * 2);
@@ -308,6 +430,30 @@ public class FretboardDisplayModule implements TrainingModule {
         double radius = Math.max(2.0, fretMarkerRadius);
         gc.fillOval(x - radius, y1 - radius, radius * 2, radius * 2);
         gc.fillOval(x - radius, y2 - radius, radius * 2, radius * 2);
+    }
+
+    /**
+     * Draws double fret markers for fanned fret fretboards.
+     * The markers are positioned along the angled fret line at 1/3 and 2/3 positions.
+     */
+    private void drawFannedDoubleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
+            double padding, double nutWidth, double fretWidth, double fretMarkerRadius,
+            int numFrets, int numStrings, double stringSpacing, double fanOffsetPerString) {
+        double fanProgress = ((double) fret - 0.5) / numFrets;
+        double topX = padding + nutWidth + ((fret - 0.5) * fretWidth);
+        double totalFanOffset = fanOffsetPerString * (numStrings - 1) * fanProgress;
+        
+        // Calculate Y positions (1/3 and 2/3 of fretboard height)
+        double y1 = padding + (fretboardHeight / 3);
+        double y2 = padding + (fretboardHeight * 2 / 3);
+        
+        // Calculate X positions along the angled fret line
+        double x1 = topX + (totalFanOffset / 3);
+        double x2 = topX + (totalFanOffset * 2 / 3);
+        
+        double radius = Math.max(2.0, fretMarkerRadius);
+        gc.fillOval(x1 - radius, y1 - radius, radius * 2, radius * 2);
+        gc.fillOval(x2 - radius, y2 - radius, radius * 2, radius * 2);
     }
 
     @Override
