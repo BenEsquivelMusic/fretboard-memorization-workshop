@@ -17,14 +17,17 @@ public final class UserSettings implements Serializable {
     public static final int MIN_STRING_COUNT = 6;
     public static final int MAX_STRING_COUNT = 8;
 
+    public static final WoodGrain DEFAULT_WOOD_GRAIN = WoodGrain.ROSEWOOD;
+
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private String guitarInputPort;
     private int numberOfFrets;
     private int numberOfStrings;
     private String dataSaveLocation;
     private float inputSampleRate;
     private int inputBufferSize;
+    private WoodGrain fretboardWoodGrain;
 
     /**
      * Default constructor with standard guitar settings.
@@ -34,6 +37,7 @@ public final class UserSettings implements Serializable {
         this.inputSampleRate = 44100.0f;
         this.inputBufferSize = 4096;
         this.numberOfStrings = DEFAULT_STRING_COUNT;
+        this.fretboardWoodGrain = DEFAULT_WOOD_GRAIN;
         validateSettings();
     }
 
@@ -89,6 +93,14 @@ public final class UserSettings implements Serializable {
         this.inputBufferSize = inputBufferSize;
     }
 
+    public WoodGrain getFretboardWoodGrain() {
+        return fretboardWoodGrain != null ? fretboardWoodGrain : DEFAULT_WOOD_GRAIN;
+    }
+
+    public void setFretboardWoodGrain(WoodGrain fretboardWoodGrain) {
+        this.fretboardWoodGrain = fretboardWoodGrain != null ? fretboardWoodGrain : DEFAULT_WOOD_GRAIN;
+    }
+
     /**
      * Checks if the guitar input port has been configured.
      *
@@ -112,6 +124,8 @@ public final class UserSettings implements Serializable {
         return "UserSettings{" +
                 "guitarInputPort='" + guitarInputPort + '\'' +
                 ", numberOfFrets=" + numberOfFrets +
+                ", numberOfStrings=" + numberOfStrings +
+                ", fretboardWoodGrain=" + fretboardWoodGrain +
                 ", dataSaveLocation='" + dataSaveLocation + '\'' +
                 '}';
     }
