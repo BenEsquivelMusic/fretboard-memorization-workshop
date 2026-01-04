@@ -100,6 +100,8 @@ public final class FretboardDisplayModule implements TrainingModule {
     
     // Reusable Text object for measuring text bounds to avoid creating new objects during rendering
     private final Text textMeasurer = new Text();
+    private Font cachedMeasurerFont = null;
+    private double cachedMeasurerFontSize = -1;
 
     /**
      * Creates a new FretboardDisplayModule with the given user settings.
@@ -612,15 +614,20 @@ public final class FretboardDisplayModule implements TrainingModule {
         
         // Measure actual text width for precise horizontal centering
         // Reuse the textMeasurer object to avoid creating new objects during rendering
+        // Cache the font to avoid unnecessary font setting operations
+        if (cachedMeasurerFontSize != fontSize) {
+            cachedMeasurerFont = Font.font("System", fontSize);
+            cachedMeasurerFontSize = fontSize;
+            textMeasurer.setFont(cachedMeasurerFont);
+        }
         textMeasurer.setText(label);
-        textMeasurer.setFont(Font.font("System", fontSize));
         double actualTextWidth = textMeasurer.getLayoutBounds().getWidth();
         
         // Calculate centered text position
         // Horizontal: center the text within the label width
         double textX = labelX + (labelWidth - actualTextWidth) / 2;
         // Vertical: position text baseline to center the text within the label height
-        // Text baseline is roughly at fontSize * 0.75 from the top of the text bounds
+        // The factor 0.35 was determined empirically to vertically center text within the background
         double textY = labelY + (labelHeight / 2) + (fontSize * 0.35);
         
         gc.fillText(label, textX, textY);
