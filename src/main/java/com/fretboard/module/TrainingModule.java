@@ -7,7 +7,7 @@ import javafx.scene.Node;
  * Interface defining the contract for pluggable guitar training modules.
  * Each training module provides a specific type of fretboard training exercise.
  */
-public sealed interface TrainingModule permits FretboardDisplayModule, StringOctaveDrillModule {
+public sealed interface TrainingModule permits FretboardDisplayModule, RandomNoteStringDrill, RandomNoteFretboardDrill {
 
     /**
      * Gets the unique identifier for this module.
