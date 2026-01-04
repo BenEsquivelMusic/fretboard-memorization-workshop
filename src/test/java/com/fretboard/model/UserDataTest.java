@@ -23,7 +23,7 @@ class UserDataTest {
     void checkDefaultUserSettingsFromUserData() {
         UserData userData = new UserData();
         UserSettings settings = userData.getSettings();
-        assertEquals(24, settings.getNumberOfFrets());
+        assertEquals(12, settings.getNumberOfFrets());
         assertEquals(44100.0f, settings.getInputSampleRate());
         assertEquals(4096, settings.getInputBufferSize());
     }
