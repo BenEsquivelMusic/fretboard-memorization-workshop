@@ -63,6 +63,9 @@ public final class FretboardDisplayModule implements TrainingModule {
     
     // Vertical text centering factor - empirically determined to center text baseline within label background
     private static final double VERTICAL_TEXT_CENTERING_FACTOR = 0.35;
+    
+    // Tolerance for floating-point font size comparison to avoid precision issues
+    private static final double FONT_SIZE_COMPARISON_TOLERANCE = 0.001;
 
     // Fanned fret configuration - the angle creates a fan effect across the fretboard
     // This represents how much the fret slants per string (in pixels at base scale)
@@ -618,7 +621,7 @@ public final class FretboardDisplayModule implements TrainingModule {
         // Measure actual text width for precise horizontal centering
         // Reuse the textMeasurer object to avoid creating new objects during rendering
         // Cache the font to avoid unnecessary font setting operations
-        if (Math.abs(cachedMeasurerFontSize - fontSize) > 0.001) {
+        if (Math.abs(cachedMeasurerFontSize - fontSize) > FONT_SIZE_COMPARISON_TOLERANCE) {
             cachedMeasurerFont = Font.font("System", fontSize);
             cachedMeasurerFontSize = fontSize;
             textMeasurer.setFont(cachedMeasurerFont);
