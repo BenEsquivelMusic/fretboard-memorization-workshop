@@ -1,15 +1,11 @@
 package com.fretboard.service;
 
-import java.util.logging.Logger;
-
 /**
  * Service for detecting pitch from raw audio data.
  * Uses autocorrelation algorithm for fundamental frequency detection.
  */
 public final class PitchDetectionService {
 
-    private static final Logger LOGGER = Logger.getLogger(PitchDetectionService.class.getName());
-    
     // Frequency bounds for guitar (lowest note on 8-string ~24Hz, highest ~1320Hz)
     private static final double MIN_FREQUENCY = 20.0;
     private static final double MAX_FREQUENCY = 1400.0;
@@ -100,8 +96,8 @@ public final class PitchDetectionService {
         
         // Normalize factor (autocorrelation at lag 0)
         double acf0 = 0;
-        for (int i = 0; i < n; i++) {
-            acf0 += samples[i] * samples[i];
+        for (double sample : samples) {
+            acf0 += sample * sample;
         }
         
         if (acf0 == 0) {

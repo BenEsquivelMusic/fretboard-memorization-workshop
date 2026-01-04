@@ -1,7 +1,6 @@
 package com.fretboard.module;
 
 import com.fretboard.model.Frequency;
-import com.fretboard.model.Note;
 import com.fretboard.model.TrainingModuleProgress;
 import com.fretboard.model.UserSettings;
 import com.fretboard.model.WoodGrain;
@@ -17,10 +16,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.List;

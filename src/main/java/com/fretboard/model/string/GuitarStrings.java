@@ -19,10 +19,6 @@ public final class GuitarStrings {
         return guitarStrings.toArray(new GuitarString[guitarStrings.size()]);
     }
 
-    public GuitarString get(int stringNumber) {
-        return guitarStrings.get(stringNumber - 1);
-    }
-
     private static final class GuitarStringList extends ArrayList<GuitarString> {
 
         private GuitarStringList(byte numFrets, byte numStrings) {

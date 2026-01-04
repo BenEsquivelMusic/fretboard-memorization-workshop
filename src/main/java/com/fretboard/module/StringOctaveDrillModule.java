@@ -29,12 +29,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -224,6 +219,7 @@ public final class StringOctaveDrillModule implements TrainingModule {
     }
 
     private void startDrill() {
+        LOGGER.info("Starting drill");
         if (!audioInputService.isCapturing()) {
             if (!audioInputService.startCapture()) {
                 showMessage("Audio Error", "Could not start audio capture. Check your audio settings.");
@@ -248,6 +244,7 @@ public final class StringOctaveDrillModule implements TrainingModule {
     }
 
     private void stopDrill() {
+        LOGGER.info("Stopping drill");
         sessionActive = false;
         running = false;
         timer.stop();
