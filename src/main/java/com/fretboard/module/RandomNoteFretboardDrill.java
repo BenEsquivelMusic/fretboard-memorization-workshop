@@ -610,11 +610,6 @@ public final class RandomNoteFretboardDrill implements TrainingModule {
     }
 
     @Override
-    public void pause() {
-        running = false;
-    }
-
-    @Override
     public void stop() {
         stopDrill();
     }

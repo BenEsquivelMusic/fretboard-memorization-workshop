@@ -60,11 +60,6 @@ public sealed interface TrainingModule permits FretboardDisplayModule, RandomNot
     void start();
 
     /**
-     * Pauses the training exercise.
-     */
-    void pause();
-
-    /**
      * Stops the training exercise and resets to initial state.
      */
     void stop();
@@ -91,14 +86,5 @@ public sealed interface TrainingModule permits FretboardDisplayModule, RandomNot
      */
     default void onAudioInput(byte[] audioData, float sampleRate) {
         // Default implementation does nothing
-    }
-
-    /**
-     * Gets the icon resource path for this module.
-     *
-     * @return the icon resource path, or null if no icon is available
-     */
-    default String getIconPath() {
-        return null;
     }
 }

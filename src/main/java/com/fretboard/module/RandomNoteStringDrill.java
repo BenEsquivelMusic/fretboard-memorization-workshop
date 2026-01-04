@@ -631,11 +631,6 @@ public final class RandomNoteStringDrill implements TrainingModule {
     }
 
     @Override
-    public void pause() {
-        running = false;
-    }
-
-    @Override
     public void stop() {
         stopDrill();
     }
