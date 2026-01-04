@@ -45,12 +45,12 @@ import java.util.logging.Logger;
  * 
  * This is an ongoing training exercise - all attempts are saved for analysis.
  */
-public final class StringOctaveDrillModule implements TrainingModule {
+public final class RandomNoteStringDrill implements TrainingModule {
 
-    private static final Logger LOGGER = Logger.getLogger(StringOctaveDrillModule.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RandomNoteStringDrill.class.getName());
     
-    private static final String MODULE_ID = "string-octave-drill";
-    private static final String MODULE_NAME = "String Octave Drill";
+    public static final String MODULE_ID = "random-note-string-drill";
+    private static final String MODULE_NAME = "Random Note String Drill";
     private static final String MODULE_DESCRIPTION = 
             "Practice finding all octaves of a note on each string. " +
             "Start from the lowest string and work up to the high E. " +
@@ -94,11 +94,11 @@ public final class StringOctaveDrillModule implements TrainingModule {
     private List<StringAttemptResult> currentSessionResults;
 
     /**
-     * Creates a new StringOctaveDrillModule.
+     * Creates a new RandomNoteStringDrill.
      *
      * @param userSettings the user settings
      */
-    public StringOctaveDrillModule(UserSettings userSettings) {
+    public RandomNoteStringDrill(UserSettings userSettings) {
         this.userSettings = userSettings;
         this.guitarStrings = new GuitarStrings(userSettings);
         this.frequencyMapService = FrequencyMapService.getService();

@@ -43,7 +43,7 @@ import java.util.List;
  */
 public final class FretboardDisplayModule implements TrainingModule {
 
-    private static final String MODULE_ID = "fretboard-display";
+    public static final String MODULE_ID = "fretboard-display";
     private static final String MODULE_NAME = "Fretboard Display";
     private static final String MODULE_DESCRIPTION = "Displays a visual representation of the guitar fretboard based on your settings.";
 

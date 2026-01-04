@@ -3,10 +3,7 @@ package com.fretboard.controller;
 import com.fretboard.constants.ApplicationIcons;
 import com.fretboard.model.UserData;
 import com.fretboard.model.UserSettings;
-import com.fretboard.module.FretboardDisplayModule;
-import com.fretboard.module.StringOctaveDrillModule;
-import com.fretboard.module.TrainingModule;
-import com.fretboard.module.TrainingModuleRegistry;
+import com.fretboard.module.*;
 import com.fretboard.service.AudioInputService;
 import com.fretboard.service.UserDataService;
 import javafx.application.Platform;
@@ -30,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +38,10 @@ import java.util.logging.Logger;
 public final class MainController {
 
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
+    private static final String FRETBOARD_DISPLAY = FretboardDisplayModule.MODULE_ID;
+    private static final String RANDOM_NOTE_STRING = RandomNoteStringDrill.MODULE_ID;
+    private static final String RANDOM_NOTE_FRETBOARD = RandomNoteFretboardDrill.MODULE_ID;
+    private static final Set<String> MODULES_REQUIRING_USER_PROFILE = Set.of(RANDOM_NOTE_STRING, RANDOM_NOTE_FRETBOARD);
     private final UserDataService userDataService;
     private final AudioInputService audioInputService;
     private final TrainingModuleRegistry moduleRegistry;
@@ -84,13 +86,18 @@ public final class MainController {
         UserData userData = userDataService.getCurrentUserData();
         
         // Register the Fretboard Display Module (always available)
-        if (!moduleRegistry.isModuleRegistered("fretboard-display")) {
+        if (!moduleRegistry.isModuleRegistered(FRETBOARD_DISPLAY)) {
             moduleRegistry.registerModule(new FretboardDisplayModule(userData.getSettings()));
         }
         
-        // Register the String Octave Drill Module (requires profile to be active)
-        if (!moduleRegistry.isModuleRegistered("string-octave-drill")) {
-            moduleRegistry.registerModule(new StringOctaveDrillModule(userData.getSettings()));
+        // Register the Random Note String Module (requires profile to be active)
+        if (!moduleRegistry.isModuleRegistered(RANDOM_NOTE_STRING)) {
+            moduleRegistry.registerModule(new RandomNoteStringDrill(userData.getSettings()));
+        }
+
+        // Register the Random Note Fretboard Drill (requires profile to be active)
+        if (!moduleRegistry.isModuleRegistered(RANDOM_NOTE_FRETBOARD)) {
+            moduleRegistry.registerModule(new RandomNoteFretboardDrill(userData.getSettings()));
         }
     }
 
@@ -383,28 +390,39 @@ public final class MainController {
         UserData userData = userDataService.getCurrentUserData();
         
         // Unregister and re-register the FretboardDisplayModule with new settings
-        if (moduleRegistry.isModuleRegistered("fretboard-display")) {
-            moduleRegistry.unregisterModule("fretboard-display");
+        if (moduleRegistry.isModuleRegistered(FRETBOARD_DISPLAY)) {
+            moduleRegistry.unregisterModule(FRETBOARD_DISPLAY);
             moduleRegistry.registerModule(new FretboardDisplayModule(userData.getSettings()));
         }
         
-        // Unregister and re-register the StringOctaveDrillModule with new settings
-        if (moduleRegistry.isModuleRegistered("string-octave-drill")) {
-            moduleRegistry.unregisterModule("string-octave-drill");
-            moduleRegistry.registerModule(new StringOctaveDrillModule(userData.getSettings()));
+        // Unregister and re-register the Random Note String Drill with new settings
+        if (moduleRegistry.isModuleRegistered(RANDOM_NOTE_STRING)) {
+            moduleRegistry.unregisterModule(RANDOM_NOTE_STRING);
+            moduleRegistry.registerModule(new RandomNoteStringDrill(userData.getSettings()));
+        }
+
+        // Unregister and re-register the Random Note Fretboard Drill with new settings
+        if (moduleRegistry.isModuleRegistered(RANDOM_NOTE_FRETBOARD)) {
+            moduleRegistry.unregisterModule(RANDOM_NOTE_FRETBOARD);
+            moduleRegistry.registerModule(new RandomNoteFretboardDrill(userData.getSettings()));
         }
         
         // Update the module list in the UI
         updateModuleList();
         
         // If the fretboard display module was active, re-select it
-        if (activeModule != null && "fretboard-display".equals(activeModule.getModuleId())) {
-            moduleRegistry.getModule("fretboard-display").ifPresent(this::selectModule);
+        if (activeModule != null && FRETBOARD_DISPLAY.equals(activeModule.getModuleId())) {
+            moduleRegistry.getModule(FRETBOARD_DISPLAY).ifPresent(this::selectModule);
         }
         
-        // If the string octave drill module was active, re-select it
-        if (activeModule != null && "string-octave-drill".equals(activeModule.getModuleId())) {
-            moduleRegistry.getModule("string-octave-drill").ifPresent(this::selectModule);
+        // If the RANDOM_NOTE_STRING module was active, re-select it
+        if (activeModule != null && RANDOM_NOTE_STRING.equals(activeModule.getModuleId())) {
+            moduleRegistry.getModule(RANDOM_NOTE_STRING).ifPresent(this::selectModule);
+        }
+
+        // If the RANDOM_NOTE_FRETBOARD module was active, re-select it
+        if (activeModule != null && RANDOM_NOTE_FRETBOARD.equals(activeModule.getModuleId())) {
+            moduleRegistry.getModule(RANDOM_NOTE_FRETBOARD).ifPresent(this::selectModule);
         }
     }
 
@@ -433,7 +451,7 @@ public final class MainController {
 
     public void selectModule(TrainingModule module) {
         // Check if module requires profile and profile is not active
-        if ("string-octave-drill".equals(module.getModuleId()) && !profileActive) {
+        if (MODULES_REQUIRING_USER_PROFILE.contains(module.getModuleId()) && !profileActive) {
             showError("Profile Required", 
                     "Please create or open a user profile before using the String Octave Drill module.\n\n" +
                     "This module saves your training progress, so a profile is required.");
@@ -462,7 +480,7 @@ public final class MainController {
             moduleButton.getStyleClass().add("module-button");
             
             // Visually indicate if module requires profile when profile is not active
-            if ("string-octave-drill".equals(module.getModuleId()) && !profileActive) {
+            if (MODULES_REQUIRING_USER_PROFILE.contains(module.getModuleId()) && !profileActive) {
                 moduleButton.setStyle("-fx-opacity: 0.6;");
                 moduleButton.setTooltip(new Tooltip(module.getDescription() + 
                         "\n\n⚠ Requires an active user profile"));
