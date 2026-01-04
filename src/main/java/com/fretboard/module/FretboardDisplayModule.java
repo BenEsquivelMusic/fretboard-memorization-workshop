@@ -42,7 +42,7 @@ import java.util.List;
  * - Frets toward the nut angle in one direction (bass side extends further toward headstock)
  * - Frets toward the bridge angle in the opposite direction (bass side extends further toward bridge)
  */
-public class FretboardDisplayModule implements TrainingModule {
+public final class FretboardDisplayModule implements TrainingModule {
 
     private static final String MODULE_ID = "fretboard-display";
     private static final String MODULE_NAME = "Fretboard Display";

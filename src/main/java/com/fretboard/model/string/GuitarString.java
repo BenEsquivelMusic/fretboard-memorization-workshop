@@ -49,6 +49,8 @@ public sealed abstract class GuitarString permits
         buildFretBoard(orderedNotes.toArray(new Note[orderedNotes.size()]));
     }
 
+    public abstract String getStringName();
+
     public Frequency getOpenString() {
         return openString;
     }

@@ -10,4 +10,8 @@ public final class HighBString extends GuitarString {
         super((byte) 2, numFrets, new Frequency((byte) 3, note), note.getOrderedNotes());
     }
 
+    @Override
+    public String getStringName() {
+        return Note.B.name();
+    }
 }

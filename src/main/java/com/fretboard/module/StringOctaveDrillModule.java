@@ -6,7 +6,6 @@ import com.fretboard.model.TrainingModuleProgress;
 import com.fretboard.model.UserSettings;
 import com.fretboard.model.string.GuitarString;
 import com.fretboard.model.string.GuitarStrings;
-import com.fretboard.model.string.HighEString;
 import com.fretboard.service.AudioInputService;
 import com.fretboard.service.FrequencyMapService;
 import com.fretboard.service.PitchDetectionService;
@@ -51,7 +50,7 @@ import java.util.logging.Logger;
  * 
  * This is an ongoing training exercise - all attempts are saved for analysis.
  */
-public class StringOctaveDrillModule implements TrainingModule {
+public final class StringOctaveDrillModule implements TrainingModule {
 
     private static final Logger LOGGER = Logger.getLogger(StringOctaveDrillModule.class.getName());
     
@@ -456,17 +455,7 @@ public class StringOctaveDrillModule implements TrainingModule {
     }
 
     private String getStringName(GuitarString string) {
-        return switch (string.getStringNumber()) {
-            case 1 -> "High E";
-            case 2 -> "B";
-            case 3 -> "G";
-            case 4 -> "D";
-            case 5 -> "A";
-            case 6 -> "Low E";
-            case 7 -> "Low B";
-            case 8 -> "Low F#";
-            default -> "String " + string.getStringNumber();
-        };
+        return string.getStringName();
     }
 
     @Override

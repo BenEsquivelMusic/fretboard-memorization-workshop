@@ -10,4 +10,9 @@ public final class HighEString extends GuitarString {
         super((byte) 1, numFrets, new Frequency((byte) 4, note), note.getOrderedNotes());
     }
 
+    @Override
+    public String getStringName() {
+        return "High E";
+    }
+
 }

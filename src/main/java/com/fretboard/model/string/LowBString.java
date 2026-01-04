@@ -11,4 +11,8 @@ public final class LowBString extends GuitarString {
         super((byte) 7, numFrets, new Frequency((byte) 1, note), note.getOrderedNotes());
     }
 
+    @Override
+    public String getStringName() {
+        return "Low B";
+    }
 }
