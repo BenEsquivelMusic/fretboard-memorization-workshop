@@ -97,6 +97,9 @@ public final class FretboardDisplayModule implements TrainingModule {
     private int selectedFretIndex = -1;
     private List<FrequencyClickRegion> frequencyClickRegions = new ArrayList<>();
     private GuitarStrings guitarStrings;
+    
+    // Reusable Text object for measuring text bounds to avoid creating new objects during rendering
+    private final Text textMeasurer = new Text();
 
     /**
      * Creates a new FretboardDisplayModule with the given user settings.
@@ -608,9 +611,10 @@ public final class FretboardDisplayModule implements TrainingModule {
         gc.setFont(Font.font("System", fontSize));
         
         // Measure actual text width for precise horizontal centering
-        Text textNode = new Text(label);
-        textNode.setFont(Font.font("System", fontSize));
-        double actualTextWidth = textNode.getLayoutBounds().getWidth();
+        // Reuse the textMeasurer object to avoid creating new objects during rendering
+        textMeasurer.setText(label);
+        textMeasurer.setFont(Font.font("System", fontSize));
+        double actualTextWidth = textMeasurer.getLayoutBounds().getWidth();
         
         // Calculate centered text position
         // Horizontal: center the text within the label width
