@@ -62,6 +62,9 @@ public final class FretboardDisplayModule implements TrainingModule {
     private static final double BASE_LABEL_AREA_HEIGHT = 12.0;
     
     // Vertical text centering factor - empirically determined to center text baseline within label background
+    // JavaFX's fillText() positions text by its baseline, not center. The value 0.35 accounts for the
+    // baseline offset needed to vertically center text within the label height (fontSize + vertical padding).
+    // This factor represents approximately the ratio of the ascent to the total text height.
     private static final double VERTICAL_TEXT_CENTERING_FACTOR = 0.35;
     
     // Tolerance for floating-point font size comparison to avoid precision issues
@@ -574,7 +577,7 @@ public final class FretboardDisplayModule implements TrainingModule {
         
         // Measure actual text dimensions for accurate layout
         // Cache the font to avoid unnecessary font setting operations
-        if (Math.abs(cachedMeasurerFontSize - fontSize) > FONT_SIZE_COMPARISON_TOLERANCE) {
+        if (cachedMeasurerFont == null || Math.abs(cachedMeasurerFontSize - fontSize) > FONT_SIZE_COMPARISON_TOLERANCE) {
             cachedMeasurerFont = Font.font("System", fontSize);
             cachedMeasurerFontSize = fontSize;
             textMeasurer.setFont(cachedMeasurerFont);
