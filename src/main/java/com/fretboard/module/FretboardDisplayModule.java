@@ -553,6 +553,7 @@ public final class FretboardDisplayModule implements TrainingModule {
     
     /**
      * Draws a single frequency label with appropriate highlighting.
+     * Uses proper text measurements for accurate centering within the background.
      */
     private void drawFrequencyLabel(GraphicsContext gc, Frequency frequency, double x, double y,
             double fontSize, double scale, int stringIndex, int fretIndex) {
@@ -560,10 +561,20 @@ public final class FretboardDisplayModule implements TrainingModule {
         // Determine label text based on showOctave setting
         String label = showOctave ? frequency.note().getDisplayNote() + frequency.octaveNumber() 
                                   : frequency.note().getDisplayNote();
-        double labelWidth = label.length() * fontSize * 0.6;
-        double labelHeight = fontSize * 1.2;
         
-        // Calculate label bounds
+        // Use a Text node to get accurate text measurements for proper centering
+        Text textMeasure = new Text(label);
+        textMeasure.setFont(Font.font("System", fontSize));
+        double textWidth = textMeasure.getLayoutBounds().getWidth();
+        double textHeight = textMeasure.getLayoutBounds().getHeight();
+        
+        // Add padding around the text for the background
+        double horizontalPadding = 3 * scale;
+        double verticalPadding = 2 * scale;
+        double labelWidth = textWidth + (horizontalPadding * 2);
+        double labelHeight = textHeight + (verticalPadding * 2);
+        
+        // Calculate label bounds - center the background around the fret position
         double labelX = x - (labelWidth / 2);
         double labelY = y - (labelHeight / 2);
         
@@ -603,10 +614,12 @@ public final class FretboardDisplayModule implements TrainingModule {
         gc.setFill(bgColor);
         gc.fillRoundRect(labelX, labelY, labelWidth, labelHeight, 4 * scale, 4 * scale);
         
-        // Draw text
+        // Draw text - center text within the background using proper baseline positioning
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("System", fontSize));
-        gc.fillText(label, labelX + (2 * scale), y + (fontSize * 0.35));
+        double textX = labelX + horizontalPadding;
+        double textY = labelY + verticalPadding + textMeasure.getBaselineOffset();
+        gc.fillText(label, textX, textY);
     }
 
     private void drawWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, 
@@ -623,11 +636,11 @@ public final class FretboardDisplayModule implements TrainingModule {
         gc.setLineWidth(Math.max(0.5, scale * 0.5));
         
         double grainSpacing = Math.max(4.0, 8.0 * scale);
-        for (double y = padding; y < padding + fretboardHeight; y += grainSpacing) {
+        for (double grainY = padding; grainY < padding + fretboardHeight; grainY += grainSpacing) {
             // Add slight variation to make it look more natural
-            double offset = Math.sin(y * 0.1 / Math.max(0.1, scale)) * 2 * scale;
+            double offset = Math.sin(grainY * 0.1 / Math.max(0.1, scale)) * 2 * scale;
             gc.setGlobalAlpha(0.3);
-            gc.strokeLine(padding + offset, y, padding + nutWidth + fretboardWidth + offset, y);
+            gc.strokeLine(padding + offset, grainY, padding + nutWidth + fretboardWidth + offset, grainY);
         }
         gc.setGlobalAlpha(1.0);
     }
@@ -667,26 +680,26 @@ public final class FretboardDisplayModule implements TrainingModule {
         gc.setLineWidth(Math.max(0.5, scale * 0.5));
         
         double grainSpacing = Math.max(4.0, 8.0 * scale);
-        for (double y = padding; y < padding + fretboardHeight; y += grainSpacing) {
+        for (double grainY = padding; grainY < padding + fretboardHeight; grainY += grainSpacing) {
             // Calculate the X offset based on Y position for fanned effect
-            double yProgress = (y - padding) / fretboardHeight;
+            double yProgress = (grainY - padding) / fretboardHeight;
             double leftX = topLeft + (bottomLeft - topLeft) * yProgress;
             double rightX = topRight + (bottomRight - topRight) * yProgress;
             
             // Add slight variation to make it look more natural
-            double offset = Math.sin(y * 0.1 / Math.max(0.1, scale)) * 2 * scale;
+            double offset = Math.sin(grainY * 0.1 / Math.max(0.1, scale)) * 2 * scale;
             gc.setGlobalAlpha(0.3);
-            gc.strokeLine(leftX + offset, y, rightX + offset, y);
+            gc.strokeLine(leftX + offset, grainY, rightX + offset, grainY);
         }
         gc.setGlobalAlpha(1.0);
     }
 
     private void drawSingleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
             double padding, double nutWidth, double fretWidth, double fretMarkerRadius) {
-        double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
-        double y = padding + (fretboardHeight / 2);
+        double markerX = padding + nutWidth + ((fret - 0.5) * fretWidth);
+        double markerY = padding + (fretboardHeight / 2);
         double radius = Math.max(2.0, fretMarkerRadius);
-        gc.fillOval(x - radius, y - radius, radius * 2, radius * 2);
+        gc.fillOval(markerX - radius, markerY - radius, radius * 2, radius * 2);
     }
 
     /**
@@ -703,21 +716,21 @@ public final class FretboardDisplayModule implements TrainingModule {
         // Calculate X at the middle string position
         double topX = calculateFannedFretX(fretPosition, 0, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
         double bottomX = calculateFannedFretX(fretPosition, numStrings - 1, padding, nutWidth, fretWidth, numFrets, fanOffsetPerString, numStrings);
-        double x = (topX + bottomX) / 2; // Center of the fret line
+        double markerX = (topX + bottomX) / 2; // Center of the fret line
         
-        double y = padding + (fretboardHeight / 2);
+        double markerY = padding + (fretboardHeight / 2);
         double radius = Math.max(2.0, fretMarkerRadius);
-        gc.fillOval(x - radius, y - radius, radius * 2, radius * 2);
+        gc.fillOval(markerX - radius, markerY - radius, radius * 2, radius * 2);
     }
 
     private void drawDoubleFretMarker(GraphicsContext gc, int fret, double fretboardHeight, 
             double padding, double nutWidth, double fretWidth, double fretMarkerRadius) {
-        double x = padding + nutWidth + ((fret - 0.5) * fretWidth);
+        double markerX = padding + nutWidth + ((fret - 0.5) * fretWidth);
         double y1 = padding + (fretboardHeight / 3);
         double y2 = padding + (fretboardHeight * 2 / 3);
         double radius = Math.max(2.0, fretMarkerRadius);
-        gc.fillOval(x - radius, y1 - radius, radius * 2, radius * 2);
-        gc.fillOval(x - radius, y2 - radius, radius * 2, radius * 2);
+        gc.fillOval(markerX - radius, y1 - radius, radius * 2, radius * 2);
+        gc.fillOval(markerX - radius, y2 - radius, radius * 2, radius * 2);
     }
 
     /**
