@@ -603,10 +603,23 @@ public final class FretboardDisplayModule implements TrainingModule {
         gc.setFill(bgColor);
         gc.fillRoundRect(labelX, labelY, labelWidth, labelHeight, 4 * scale, 4 * scale);
         
-        // Draw text
+        // Draw text centered within the background
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("System", fontSize));
-        gc.fillText(label, labelX + (2 * scale), y + (fontSize * 0.35));
+        
+        // Measure actual text width for precise horizontal centering
+        Text textNode = new Text(label);
+        textNode.setFont(Font.font("System", fontSize));
+        double actualTextWidth = textNode.getLayoutBounds().getWidth();
+        
+        // Calculate centered text position
+        // Horizontal: center the text within the label width
+        double textX = labelX + (labelWidth - actualTextWidth) / 2;
+        // Vertical: position text baseline to center the text within the label height
+        // Text baseline is roughly at fontSize * 0.75 from the top of the text bounds
+        double textY = labelY + (labelHeight / 2) + (fontSize * 0.35);
+        
+        gc.fillText(label, textX, textY);
     }
 
     private void drawWoodGrainBackground(GraphicsContext gc, WoodGrain woodGrain, double fretboardWidth, 
