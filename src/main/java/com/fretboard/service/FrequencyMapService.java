@@ -23,7 +23,8 @@ public final class FrequencyMapService {
         int currentOctave = 0;
         long offset = 0;
         while (currentOctave < FretBoardConstants.MAX_AUDIBLE_OCTAVES) {
-            noteFrequenciesByOctave[currentOctave] = parentSegment.asSlice(offset * DOUBLE_VALUE_LAYOUT.byteSize(), FretBoardConstants.MAX_NOTES_IN_OCTAVE * DOUBLE_VALUE_LAYOUT.byteSize());
+            noteFrequenciesByOctave[currentOctave] = parentSegment.asSlice(
+                    offset * DOUBLE_VALUE_LAYOUT.byteSize(), FretBoardConstants.MAX_NOTES_IN_OCTAVE * DOUBLE_VALUE_LAYOUT.byteSize());
             ++currentOctave;
             offset += FretBoardConstants.MAX_AUDIBLE_OCTAVES;
         }
