@@ -803,11 +803,6 @@ public final class FretboardDisplayModule implements TrainingModule {
     }
 
     @Override
-    public void pause() {
-        running = false;
-    }
-
-    @Override
     public void stop() {
         running = false;
     }
@@ -820,11 +815,6 @@ public final class FretboardDisplayModule implements TrainingModule {
     @Override
     public void cleanup() {
         running = false;
-    }
-
-    @Override
-    public String getIconPath() {
-        return null;
     }
     
     /**
