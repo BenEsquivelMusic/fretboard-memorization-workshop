@@ -1,6 +1,6 @@
 package com.fretboard.controller;
 
-import com.fretboard.ApplicationIcons;
+import com.fretboard.constants.ApplicationIcons;
 import com.fretboard.model.UserData;
 import com.fretboard.model.UserSettings;
 import com.fretboard.module.FretboardDisplayModule;

@@ -1,4 +1,4 @@
-package com.fretboard;
+package com.fretboard.constants;
 
 public final class ApplicationIcons {
 

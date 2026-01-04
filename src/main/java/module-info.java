@@ -17,4 +17,6 @@ module com.fretboard {
     exports com.fretboard.service;
     exports com.fretboard.model.string;
     opens com.fretboard.model.string to javafx.fxml;
+    exports com.fretboard.constants;
+    opens com.fretboard.constants to javafx.fxml;
 }

@@ -74,11 +74,15 @@ public sealed abstract class GuitarString permits
         int numFrets = frets.length;
         Frequency[] tempFrets = new Frequency[numFrets + 1];
         while (fretCounter < numFrets) {
-            int index = fretCounter + 1;
-            Note note = orderedNotes[getNoteIndex(index)];
-            tempFrets[index] = new Frequency(octaveNumber, note);
+            int fretIndex = fretCounter + 1;
+            Note note = orderedNotes[getNoteIndex(fretIndex)];
+            if (fretIndex == 1 && Note.C.equals(note)) {
+                tempFrets[fretIndex] = new Frequency((byte) (octaveNumber + 1), note);
+            } else {
+                tempFrets[fretIndex] = new Frequency(octaveNumber, note);
+            }
             ++noteOrdinal;
-            if (noteOrdinal >= FretBoardConstants.MAX_NOTES_IN_OCTAVE) {
+            if (noteOrdinal >= FretBoardConstants.MAX_NOTES_IN_OCTAVE - 1) {
                 noteOrdinal = 0;
                 ++octaveNumber;
             }

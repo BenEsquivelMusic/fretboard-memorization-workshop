@@ -1,5 +1,6 @@
 package com.fretboard;
 
+import com.fretboard.constants.ApplicationIcons;
 import com.fretboard.controller.MainController;
 import com.fretboard.service.AudioInputService;
 import javafx.application.Application;
