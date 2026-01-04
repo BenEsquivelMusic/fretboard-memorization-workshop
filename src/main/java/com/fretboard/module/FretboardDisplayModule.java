@@ -571,8 +571,22 @@ public final class FretboardDisplayModule implements TrainingModule {
         // Determine label text based on showOctave setting
         String label = showOctave ? frequency.note().getDisplayNote() + frequency.octaveNumber() 
                                   : frequency.note().getDisplayNote();
-        double labelWidth = label.length() * fontSize * 0.6;
-        double labelHeight = fontSize * 1.2;
+        
+        // Measure actual text dimensions for accurate layout
+        // Cache the font to avoid unnecessary font setting operations
+        if (Math.abs(cachedMeasurerFontSize - fontSize) > FONT_SIZE_COMPARISON_TOLERANCE) {
+            cachedMeasurerFont = Font.font("System", fontSize);
+            cachedMeasurerFontSize = fontSize;
+            textMeasurer.setFont(cachedMeasurerFont);
+        }
+        textMeasurer.setText(label);
+        double actualTextWidth = textMeasurer.getLayoutBounds().getWidth();
+        
+        // Add padding around text for the background label
+        double horizontalPadding = fontSize * 0.3;
+        double verticalPadding = fontSize * 0.2;
+        double labelWidth = actualTextWidth + (horizontalPadding * 2);
+        double labelHeight = fontSize + (verticalPadding * 2);
         
         // Calculate label bounds
         double labelX = x - (labelWidth / 2);
@@ -618,18 +632,7 @@ public final class FretboardDisplayModule implements TrainingModule {
         gc.setFill(Color.WHITE);
         gc.setFont(Font.font("System", fontSize));
         
-        // Measure actual text width for precise horizontal centering
-        // Reuse the textMeasurer object to avoid creating new objects during rendering
-        // Cache the font to avoid unnecessary font setting operations
-        if (Math.abs(cachedMeasurerFontSize - fontSize) > FONT_SIZE_COMPARISON_TOLERANCE) {
-            cachedMeasurerFont = Font.font("System", fontSize);
-            cachedMeasurerFontSize = fontSize;
-            textMeasurer.setFont(cachedMeasurerFont);
-        }
-        textMeasurer.setText(label);
-        double actualTextWidth = textMeasurer.getLayoutBounds().getWidth();
-        
-        // Calculate centered text position
+        // Calculate centered text position (actualTextWidth was measured earlier)
         // Horizontal: center the text within the label width
         double textX = labelX + (labelWidth - actualTextWidth) / 2;
         // Vertical: position text baseline to center the text within the label height
